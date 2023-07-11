@@ -1,0 +1,194 @@
+[33mcommit 7402d7ed6b6e82a8e53d017cf619fd26a2c5569d[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: Tuğberk Günel <70752223+guneltugberk@users.noreply.github.com>
+Date:   Tue Jul 11 16:44:08 2023 +0300
+
+    Delete Pages directory
+
+[1mdiff --git "a/Pages/1_\360\237\222\271_Data_Preprocessing.py" "b/Pages/1_\360\237\222\271_Data_Preprocessing.py"[m
+[1mdeleted file mode 100644[m
+[1mindex ce5bf8f..0000000[m
+[1m--- "a/Pages/1_\360\237\222\271_Data_Preprocessing.py"[m
+[1m+++ /dev/null[m
+[36m@@ -1,246 +0,0 @@[m
+[31m-import streamlit as st[m
+[31m-[m
+[31m-st.set_page_config([m
+[31m-    page_title='Data Uploading and Preprocessing',[m
+[31m-    page_icon='💹'[m
+[31m-)[m
+[31m-[m
+[31m-st.title("Data Uploading and Preprocessing")[m
+[31m-[m
+[31m-[m
+[31m-class Upload:[m
+[31m-    def __init__(self, data_source, sheet_name):[m
+[31m-        self.df = None[m
+[31m-        self.sheet_name = sheet_name[m
+[31m-        self.data_source = data_source[m
+[31m-[m
+[31m-    def read_file(self):[m
+[31m-        import pandas as pd[m
+[31m-[m
+[31m-        if self.data_source.name.endswith(".xlsx"):[m
+[31m-            # Read Excel file[m
+[31m-            self.df = pd.read_excel(self.data_source, sheet_name=self.sheet_name)[m
+[31m-        elif self.data_source.name.endswith(".csv"):[m
+[31m-            # Read CSV file[m
+[31m-            self.df = pd.read_csv(self.data_source)[m
+[31m-        else:[m
+[31m-            # Unsupported file format[m
+[31m-            self.df = None[m
+[31m-[m
+[31m-            raise ValueError("Unsupported file format. Please upload an Excel or CSV file.")[m
+[31m-[m
+[31m-        return self.df[m
+[31m-[m
+[31m-[m
+[31m-def ConfirmedUpload():[m
+[31m-    st.session_state.confirm_upload = True[m
+[31m-[m
+[31m-[m
+[31m-def ConfirmedProcess():[m
+[31m-    st.session_state.confirm_process = True[m
+[31m-[m
+[31m-[m
+[31m-@st.cache_data(ttl=3600)[m
+[31m-def processing(well_data):[m
+[31m-    import pandas as pd[m
+[31m-    import numpy as np[m
+[31m-[m
+[31m-    zero_nan_col = [][m
+[31m-[m
+[31m-    # Find the columns containing only zero or NaN values[m
+[31m-    if isinstance(well_data, pd.DataFrame):[m
+[31m-        df = well_data.copy()[m
+[31m-[m
+[31m-        measurement_units = df.iloc[0].tolist()[m
+[31m-        df.columns = [f"{col} {unit}" for col, unit in zip(df.columns, measurement_units)][m
+[31m-[m
+[31m-        df = df.iloc[1:].reset_index(drop=True)[m
+[31m-[m
+[31m-        for col in df.columns:[m
+[31m-            if np.all(pd.isna(df[col])) or np.all(df[col] == 0):[m
+[31m-                zero_nan_col.append(col)[m
+[31m-[m
+[31m-        df = df.drop(zero_nan_col, axis=1)[m
+[31m-[m
+[31m-        df = df.apply(pd.to_numeric, errors='coerce')[m
+[31m-[m
+[31m-[m
+[31m-        return df, len(df['Zeit [s]']), len(df.columns)[m
+[31m-[m
+[31m-    return None[m
+[31m-[m
+[31m-[m
+[31m-@st.cache_data(ttl=3600)[m
+[31m-def dropNaN(dropped):[m
+[31m-    import pandas as pd[m
+[31m-[m
+[31m-    global dropped_copy[m
+[31m-[m
+[31m-    if isinstance(dropped, pd.DataFrame):[m
+[31m-        dropped_copy = dropped.dropna()[m
+[31m-[m
+[31m-        if dropped_copy.empty:[m
+[31m-            return None[m
+[31m-[m
+[31m-    return dropped_copy[m
+[31m-[m
+[31m-[m
+[31m-def main():[m
+[31m-    import time[m
+[31m-    import pandas as pd[m
+[31m-[m
+[31m-    st.info("Uploaded dataset must include the following features")[m
+[31m-[m
+[31m-    data = [['Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation',[m
+[31m-             'Observation', 'Observation', 'Observation', 'Observation']][m
+[31m-[m
+[31m-    columns = ['Zeit', 'Delta Zeit', 'Teufe', 'Delta Teufe', 'vB', 'RotWinkel', 'DZ', 'Andruck', 'Drehdruck', 'p Luft',[m
+[31m-               'Q Luft'][m
+[31m-[m
+[31m-    sample = pd.DataFrame(data, columns=columns)[m
+[31m-    st.table(data=sample)[m
+[31m-[m
+[31m-    uploaded_data = st.file_uploader("**Please upload your data file**", type=['csv', 'xlsx'],[m
+[31m-                                     accept_multiple_files=False)[m
+[31m-    sheet = st.text_input("**Enter the sheet name**", placeholder='Sheet1')[m
+[31m-    st.info('**After uploading the dataset and entering the name of the sheet, please hit *Upload* button**', icon='🎯')[m
+[31m-[m
+[31m-    confirm_upload = st.button('Upload', on_click=ConfirmedUpload, type='primary')[m
+[31m-[m
+[31m-    if 'confirm_upload' not in st.session_state:[m
+[31m-        st.session_state.confirm_upload = confirm_upload[m
+[31m-[m
+[31m-    if st.session_state.confirm_upload:[m
+[31m-        if uploaded_data is not None:[m
+[31m-            if 'uploaded_data' not in st.session_state:[m
+[31m-                st.session_state.uploaded_data = uploaded_data[m
+[31m-[m
+[31m-            if sheet.strip():[m
+[31m-                # Sheet name is provided[m
+[31m-                st.success('Dataset has been uploaded!', icon="✅")[m
+[31m-            else:[m
+[31m-                st.error('Please enter a sheet name')[m
+[31m-        else:[m
+[31m-            st.error('Please upload a dataset')[m
+[31m-[m
+[31m-    if st.session_state.confirm_upload:[m
+[31m-        with st.form('Processing'):[m
+[31m-            st.subheader('Processing Data')[m
+[31m-[m
+[31m-            if 'confirm_process' not in st.session_state:[m
+[31m-                st.session_state.confirm_process = False[m
+[31m-[m
+[31m-            st.form_submit_button('Process', on_click=ConfirmedProcess, type='primary')[m
+[31m-[m
+[31m-            if st.session_state.confirm_process:[m
+[31m-                progress_text = "**Operation in progress. Please wait.**"[m
+[31m-                my_bar = st.progress(0, text=progress_text)[m
+[31m-[m
+[31m-                for percent_complete in range(100):[m
+[31m-                    time.sleep(0.1)[m
+[31m-                    my_bar.progress(percent_complete + 1, text=progress_text)[m
+[31m-[m
+[31m-                    if percent_complete + 1 == 100:[m
+[31m-                        my_bar.progress(percent_complete + 1, text='**Dataset has been uploaded!**')[m
+[31m-                        st.success('**Dataset has been processed!**', icon="✅")[m
+[31m-                    elif percent_complete > 100 or percent_complete < 0:[m
+[31m-                        st.error(st.error('Something went wrong, try again!', icon="🚨"))[m
+[31m-[m
+[31m-                refresh = None[m
+[31m-[m
+[31m-                if uploaded_data is not None:[m
+[31m-                    file_name = uploaded_data.name[m
+[31m-[m
+[31m-                    if file_name.endswith(".xlsx"):[m
+[31m-                        file_name_without_extension = file_name[:-5][m
+[31m-                        st.subheader(f'**Name of the Well:** *{file_name_without_extension}*')[m
+[31m-[m
+[31m-                        refresh = True[m
+[31m-[m
+[31m-                    elif file_name.endswith(".csv"):[m
+[31m-                        file_name_without_extension = file_name[:-4][m
+[31m-                        st.subheader(f'**Name of the Well:** *{file_name_without_extension}*')[m
+[31m-[m
+[31m-                        refresh = True[m
+[31m-[m
+[31m-                    else:[m
+[31m-                        st.error(st.error('Something went wrong, try again!', icon="🚨"))[m
+[31m-[m
+[31m-                else:[m
+[31m-                    refresh = False[m
+[31m-[m
+[31m-                if refresh:[m
+[31m-                    data_frame = Upload(data_source=uploaded_data, sheet_name=sheet).read_file()[m
+[31m-                    processed_data = processing(data_frame)[0][m
+[31m-[m
+[31m-                    if 'processed_data' not in st.session_state:[m
+[31m-                        st.session_state.processed_data = processed_data[m
+[31m-[m
+[31m-                    st.table(data=st.session_state.processed_data.describe())[m
+[31m-[m
+[31m-                    num_features = processing(data_frame)[2][m
+[31m-               
