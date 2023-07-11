@@ -1,5 +1,4 @@
 import streamlit as st
-from scipy import stats
 
 st.set_page_config(
     page_title="Drilling Intervals Automation",
@@ -13,6 +12,7 @@ class Intervals:
     def outliers(data, cols, threshold):
         import pandas as pd
         import numpy as np
+        from scipy import stats
 
         data_frame = pd.DataFrame([])
 
