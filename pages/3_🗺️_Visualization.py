@@ -9,27 +9,6 @@ st.title('Visualization')
 st.divider()
 
 
-@st.cache_data(ttl=3600)
-def correlation_correction(copy_df):
-    import pandas as pd
-
-    rock_types = copy_df['Formation'].unique()
-
-    mapping = {formation: i for i, formation in enumerate(rock_types)}
-    df = pd.DataFrame(columns=rock_types)
-
-    if 'None' in df.columns:
-        df.drop('None', axis=1, inplace=True)
-
-    for rock_type, numeric_value in mapping.items():
-        print(rock_type, numeric_value)
-        df[rock_type] = [numeric_value]
-
-    copy_df['Formation'] = copy_df['Formation'].replace(mapping)
-
-    return copy_df, df
-
-
 @st.cache_resource(ttl=3600)
 def correlation_matrix_plot(data):
     import plotly.express as px
@@ -87,6 +66,8 @@ def Select():
 
 
 def main():
+    import pandas as pd
+    
     if 'stats_table' not in st.session_state:
         st.session_state.stats_table = None
 
@@ -117,35 +98,59 @@ def main():
             # Perform actions based on the selected options
             if visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Prior Data':
                 st.subheader(f'The Correlation Matrix Plot with Prior Data of {st.session_state.file_name}')
-                correct_data_prior = correlation_correction(st.session_state.dropped_data.copy())[0]
-                numeric_data_prior = correlation_correction(st.session_state.dropped_data.copy())[1]
+                rock_types = st.session_state.dropped_data['Formation'].unique()
 
-                if 'correct_data_prior' not in st.session_state:
-                    st.session_state.correct_data_prior = correct_data_prior
+                mapping_dropped = {formation: i for i, formation in enumerate(rock_types)}
+                df_numeric_dropped = pd.DataFrame(columns=rock_types)
 
-                if 'numeric_data_prior' not in st.session_state:
-                    st.session_state.numeric_data_prior = numeric_data_prior
+                copy_df_dropped = st.session_state.dropped_data.copy()
+            
+                if 'None' in df_numeric_dropped.columns:
+                    df_numeric_dropped.drop('None', axis=1, inplace=True)
+            
+                for rock_type, numeric_value in mapping.items():
+                    df_numeric_dropped[rock_type] = [numeric_value]
+            
+                copy_df_dropped['Formation'] = copy_df_dropped['Formation'].replace(mapping_dropped)
+
+                if 'copy_df_dropped' not in st.session_state:
+                    st.session_state.copy_df_dropped = copy_df_dropped
+
+                if 'df_numeric_dropped' not in st.session_state:
+                    st.session_state.df_numeric_dropped = df_numeric_dropped
                     
-                figure = correlation_matrix_plot(st.session_state.correct_data_prior)
+                figure = correlation_matrix_plot(st.session_state.copy_df_dropped)
                 st.plotly_chart(figure)
-        
-                st.table(data=st.session_state.numeric_data_prior)
+
+                st.table(data=st.session_state.df_numeric_dropped)
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
                 st.subheader(f'The Correlation Matrix Plot with Stats Data of {st.session_state.file_name}')
-                correct_data_stats = correlation_correction(st.session_state.stats_table.copy())[0]
-                numeric_data_stats = correlation_correction(st.session_state.stats_table.copy())[1]
+                rock_types = st.session_state.stats_table['Formation'].unique()
 
-                if 'correct_data_stats' not in st.session_state:
-                    st.session_state.correct_data_stats = correct_data_stats
+                mapping_stats = {formation: i for i, formation in enumerate(rock_types)}
+                df_numeric_stats = pd.DataFrame(columns=rock_types)
 
-                if 'numeric_data_stats' not in st.session_state:
-                    st.session_state.numeric_data_stats = numeric_data_stats
+                copy_df_stats = st.session_state.stats_table.copy()
+            
+                if 'None' in df_numeric_stats.columns:
+                    df_numeric_stats.drop('None', axis=1, inplace=True)
+            
+                for rock_type, numeric_value in mapping.items():
+                    df[rock_type] = [numeric_value]
+            
+                copy_df_stats['Formation'] = copy_df_stats['Formation'].replace(mapping_stats)
+
+                if 'copy_df_stats' not in st.session_state:
+                    st.session_state.copy_df_stats = copy_df_stats
+
+                if 'df_numeric_stats' not in st.session_state:
+                    st.session_state.df_numeric_stats = df_numeric_stats
                     
-                figure = correlation_matrix_plot(st.session_state.correct_data_stats)
+                figure = correlation_matrix_plot(st.session_state.copy_df_stats)
                 st.plotly_chart(figure)
 
-                st.table(data=st.session_state.numeric_data_stats)
+                st.table(data=st.session_state.df_numeric_stats)
 
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
