@@ -6,4 +6,3 @@ scipy
 plotly
 matplotlib
 seaborn
-time
