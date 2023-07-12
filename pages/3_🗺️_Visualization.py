@@ -137,7 +137,7 @@ def main():
                     df_numeric_stats.drop('None', axis=1, inplace=True)
             
                 for rock_type, numeric_value in mapping_stats.items():
-                    df[rock_type] = [numeric_value]
+                    df_numeric_stats[rock_type] = [numeric_value]
             
                 copy_df_stats['Formation'] = copy_df_stats['Formation'].replace(mapping_stats)
 
