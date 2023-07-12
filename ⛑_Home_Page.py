@@ -12,21 +12,6 @@ def main():
         layout="wide"
     )
 
-    st.title("Drilling Data Automation System")
-    
-    with st.sidebar:
-        st.spinner("Loading...")
-        time.sleep(2)
-        st.info("Please start with *Data Preprocessing*")
-
-    st.info(
-        "This web app is created by Berat Tuğberk Günel. The datasets used during the development process are acquired from TU Bergakademie Freiberg."
-    )
-
-    st.info(
-        "This project is developed under the supervision of Prof. Dr. Matthias Reich and Dr. Silke Röntzsch."
-    )
-
     st.markdown(
         """
         <style>
@@ -43,12 +28,6 @@ def main():
             margin-bottom: 20px;
         }
 
-        .stSidebar {
-            background-color: #F5F5F5;
-            padding: 10px;
-            border-radius: 10px;
-        }
-
         .stMarkdown {
             font-size: 16px;
             line-height: 1.6;
@@ -58,7 +37,7 @@ def main():
         """
         , unsafe_allow_html=True
     )
-
+    
     st.markdown(
         """
         <div class="stTitle">Drilling Data Automation System</div>
@@ -69,6 +48,21 @@ def main():
         """
         , unsafe_allow_html=True
     )
+    
+    with st.sidebar:
+        st.spinner("Loading...")
+        time.sleep(2)
+        st.info("Please start with *Data Preprocessing*")
+
+    st.info(
+        "This web app is created by Berat Tuğberk Günel. The datasets used during the development process are acquired from TU Bergakademie Freiberg."
+    )
+
+    st.info(
+        "This project is developed under the supervision of Prof. Dr. Matthias Reich and Dr. Silke Röntzsch."
+    )
+
+
 
     st.markdown(
         """
