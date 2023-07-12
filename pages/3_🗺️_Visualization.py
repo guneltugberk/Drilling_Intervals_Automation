@@ -140,6 +140,7 @@ def main():
                     df_numeric_stats[rock_type] = [numeric_value]
             
                 copy_df_stats['Formation'] = copy_df_stats['Formation'].replace(mapping_stats)
+                copy_df_stats = copy_df_stats.apply(pd.to_numeric, errors='coerce')
 
                 if 'copy_df_stats' not in st.session_state:
                     st.session_state.copy_df_stats = copy_df_stats
@@ -151,7 +152,7 @@ def main():
                 st.plotly_chart(figure)
 
                 st.table(data=st.session_state.df_numeric_stats)
-                a = st.session_state.copy_df_stats.head()
+                a = st.session_state.copy_df_stats.info()
                 st.write(a)
 
 
