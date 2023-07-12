@@ -372,6 +372,9 @@ def main():
                 stats_table = \
                     Intervals.CalculateIntervals(st.session_state.available_data, columns, pipe_length, error_rate)[0]
 
+                if 'stats_table' not in st.session_state:
+                        st.session_state.stats_table = stats_table
+
                 intervals = Intervals.CalculateIntervals(available_data, columns, pipe_length, error_rate)[1]
                 counted_interval = Intervals.CalculateIntervals(available_data, columns, pipe_length, error_rate)[2]
 
@@ -386,7 +389,7 @@ def main():
                 # Iterate over the Teufe_Mean column and assign formations to intervals
 
                 try:
-                    for depth in stats_table.loc[:, 'Teufe [m] Mean']:
+                    for depth in st.session_state.stats_table.loc[:, 'Teufe [m] Mean']:
                         assigned_formation = None
 
                         # Check if the depth falls within any interval
@@ -408,15 +411,12 @@ def main():
                         interval_formations_dropped.append(assigned_formation_dropped)
 
                     # Add the Formations column to the stats_table
-                    stats_table['Formation'] = interval_formations
+                    st.session_state.stats_table['Formation'] = interval_formations
                     st.session_state.dropped_data['Formation'] = interval_formations_dropped
-
-                    if 'stats_table' not in st.session_state:
-                        st.session_state.stats_table = stats_table
 
                     st.subheader(f'*{file_name_without_extension}* Intervals Data')
 
-                    st.table(data=stats_table)
+                    st.table(data=st.session_state.stats_table)
                     st.caption(f'**Calculated Number of Intervals:** {counted_interval}')
                     st.caption(f'**Number of Intervals in Dataset:** {intervals}')
 
