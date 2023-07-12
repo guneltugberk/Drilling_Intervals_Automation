@@ -23,7 +23,7 @@ def main():
         }
 
         .stHeader {
-            font-size: 25px;
+            font-size: 30px;
             font-weight: bold;
             color: #FF9933;
             margin-bottom: 5px;
@@ -67,10 +67,17 @@ def main():
     )
 
 
+    st.markdown("""
+    <div style="background-color: #ffdd00; padding: 10px; border-radius: 5px;">
+        <span style="color: #ff0000; font-weight: bold;">Warning:</span>
+        This project is created without the expectation of economic purposes.
+    </div>
+    """, 
+    unsafe_allow_html=True)
+    
     st.markdown(
         """
         <div class="stMarkdown">
-            This project is created without expectation of economical purposes.
             <br><br>
             <strong>👈 Please select an option from the sidebar</strong>
             <br><br>
