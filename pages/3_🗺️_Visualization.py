@@ -151,7 +151,8 @@ def main():
                 st.plotly_chart(figure)
 
                 st.table(data=st.session_state.df_numeric_stats)
-                st.write(st.session_state.copy_df_stats.dtype)
+                a = st.session_state.copy_df_stats.info()
+                st.write(a)
 
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
