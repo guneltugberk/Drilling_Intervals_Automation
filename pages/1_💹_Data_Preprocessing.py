@@ -1,5 +1,13 @@
 import streamlit as st
 
+st.set_page_config(
+    page_title='Data Uploading and Preprocessing',
+    page_icon='💹'
+)
+
+st.title("Data Uploading and Preprocessing")
+
+
 class Upload:
     def __init__(self, data_source, sheet_name):
         self.df = None
@@ -8,7 +16,6 @@ class Upload:
 
     def read_file(self):
         import pandas as pd
-        import openpyxl
 
         if self.data_source.name.endswith(".xlsx"):
             # Read Excel file
@@ -81,14 +88,6 @@ def dropNaN(dropped):
 def main():
     import time
     import pandas as pd
-    import streamlit as st
-
-    st.set_page_config(
-        page_title='Data Uploading and Preprocessing',
-        page_icon='💹'
-    )
-    
-    st.title("Data Uploading and Preprocessing")
 
     st.info("Uploaded dataset must include the following features")
 
@@ -190,57 +189,56 @@ def main():
                     missing_values = st.session_state.processed_data.isna().sum()
 
                     st.table(data=missing_values)
-
-                    if 'processed_data' in st.session_state:
-                        if missing_values.sum() > 0:
-                            with st.form('MissingData'):
-                                st.subheader("Handling with Missing Data")
-                                option = st.selectbox(
-                                    '**How would you like to manipulate the data?**',
-                                    ('Drop NaN', 'Impute NaN'))
-
-                                st.write(f'**You have selected:** *{option}*')
-
-                                confirmation = st.form_submit_button('Confirm Choice', type='primary')
-
-                                if confirmation:
-                                    if option == 'Drop NaN':
-                                        dropped_data = dropNaN(st.session_state.processed_data)
-
-                                        if 'dropped_data' not in st.session_state:
-                                            st.session_state.dropped_data = dropped_data
-
-                                        if st.session_state.dropped_data is not None:
-                                            st.success('**All missing values are dropped!**', icon="✅")
-
-                                            st.subheader('Number of Missing values')
-                                            st.table(data=dropped_data.isna().sum())
-
-                                        elif st.session_state.dropped_data is None:
-                                            st.warning('Please re-upload the dataset.', icon='💹')
-
-                                        else:
-                                            st.error('Something went wrong, try again!', icon="🚨")
-
-                                        st.divider()
-
-                                    elif option == 'Impute NaN':
-                                        st.info('Still developing')
-
-                                    else:
-                                        st.error('Something went wrong, try again!', icon="🚨")
-                        else:
-                            st.info('There are no missing values to handle.', icon='💹')
-
-                            if 'dropped_data' not in st.session_state:
-                                st.session_state.dropped_data = st.session_state.processed_data
-
-                    else:
-                        st.warning('Please upload the dataset into proceed other steps.', icon='💹')
-
+                    
                 if not refresh:
                     st.warning('Please refresh the page and re-upload the dataset.', icon='💹')
 
+        if 'processed_data' in st.session_state:
+            if missing_values.sum() > 0:
+                with st.form('MissingData'):
+                    st.subheader("Handling with Missing Data")
+                    option = st.selectbox(
+                        '**How would you like to manipulate the data?**',
+                        ('Drop NaN', 'Impute NaN'))
+
+                    st.write(f'**You have selected:** *{option}*')
+
+                    confirmation = st.form_submit_button('Confirm Choice', type='primary')
+
+                    if confirmation:
+                        if option == 'Drop NaN':
+                            dropped_data = dropNaN(st.session_state.processed_data)
+
+                            if 'dropped_data' not in st.session_state:
+                                st.session_state.dropped_data = dropped_data
+
+                            if st.session_state.dropped_data is not None:
+                                st.success('**All missing values are dropped!**', icon="✅")
+
+                                st.subheader('Number of Missing values')
+                                st.table(data=dropped_data.isna().sum())
+
+                            elif st.session_state.dropped_data is None:
+                                st.warning('Please re-upload the dataset.', icon='💹')
+
+                            else:
+                                st.error('Something went wrong, try again!', icon="🚨")
+
+                            st.divider()
+
+                        elif option == 'Impute NaN':
+                            st.info('Still developing')
+
+                        else:
+                            st.error('Something went wrong, try again!', icon="🚨")
+            else:
+                st.info('There are no missing values to handle.', icon='💹')
+
+                if 'dropped_data' not in st.session_state:
+                    st.session_state.dropped_data = st.session_state.processed_data
+
+        else:
+            st.warning('Please upload the dataset into proceed other steps.', icon='💹')
 
 
 if __name__ == '__main__':
