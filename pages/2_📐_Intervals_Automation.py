@@ -377,7 +377,6 @@ def main():
 
                 st.subheader(f'*{file_name_without_extension}* After Outlier Removal Statistics')
                 st.table(data=available_data.describe())
-                st.table(data=stats_table)
                 st.divider()
 
                 # Create a list to store the formations for each interval
