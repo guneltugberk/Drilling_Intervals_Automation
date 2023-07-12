@@ -59,15 +59,15 @@ def main():
         st.info("Please start with *Data Preprocessing*")
 
     st.info(
-        "This web app is created by Berat Tuğberk Günel. The datasets used during the development process are acquired from TU Bergakademie Freiberg."
+        "This web app is created by *Berat Tuğberk Günel*. The datasets used during the development process are acquired from *TU Bergakademie Freiberg*."
     )
 
     st.info(
-        "This project is developed under the supervision of Prof. Dr. Matthias Reich and Dr. Silke Röntzsch."
+        "This project is developed under the supervision of *Prof. Dr. Matthias Reich* and *Dr. Silke Röntzsch*."
     )
 
 
-    st.warning("This project is created without the expectation of economic purposes.", icon="❗")
+    st.warning("**This project is created without the expectation of economic purposes.**", icon="❗")
     
     st.markdown(
         """
