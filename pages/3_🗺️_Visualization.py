@@ -136,6 +136,7 @@ def main():
                 copy_df_stats = copy_df_stats.drop('Formation', axis=1)
                 figure = correlation_matrix_plot(copy_df_stats)
                 st.plotly_chart(figure)
+                st.table(data=copy_df_stats)
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
 
