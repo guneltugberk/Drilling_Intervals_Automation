@@ -82,6 +82,11 @@ def main():
                    icon='📐')
 
     elif st.session_state.dropped_data is not None and st.session_state.stats_table is not None:
+        new_stats = st.session_state.stats_table
+
+        if 'new_stats' not in st.session_state:
+            st.session_state.new_stats = new_stats
+        
         # Add a slider to select the visualization type
         visualization_type = st.sidebar.selectbox("**Select Visualization Type**",
                                                   ['Correlation Matrix Plot', 'Feature Investigation'])
@@ -127,17 +132,10 @@ def main():
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
                 st.subheader(f'The Correlation Matrix Plot with Stats Data of {st.session_state.file_name}')
-                copy_df_stats = st.session_state.stats_table.copy()
-
-                if 'copy_df_stats' not in st.session_state:
-                    st.session_state.copy_df_stats = None
-
-                if st.session_state.copy_df_stats is None:
-                    st.session_state.copy_df_stats = copy_df_stats.drop('Formation', axis=1, inplace=True)
-
-                if st.session_state.copy_df_stats is not None:
-                    figure = correlation_matrix_plot(st.session_state.copy_df_stats)
-                    st.plotly_chart(figure)
+                copy_df_stats = st.session_state.new_stats.copy()
+                copy_df_stats = copy_df_stats.drop('Formation', axis=1)
+                figure = correlation_matrix_plot(copy_df_stats)
+                st.plotly_chart(figure)
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
 
