@@ -122,39 +122,20 @@ def main():
                 figure = correlation_matrix_plot(st.session_state.copy_df_dropped)
                 st.plotly_chart(figure)
 
+                st.subheader('Numeric Representation of Formations')
                 st.table(data=st.session_state.df_numeric_dropped)
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
                 st.subheader(f'The Correlation Matrix Plot with Stats Data of {st.session_state.file_name}')
-                rock_types = st.session_state.stats_table['Formation'].unique()
-
-                mapping_stats = {formation: i for i, formation in enumerate(rock_types)}
-                df_numeric_stats = pd.DataFrame(columns=rock_types)
-
                 copy_df_stats = st.session_state.stats_table.copy()
-            
-                if 'None' in df_numeric_stats.columns:
-                    df_numeric_stats.drop('None', axis=1, inplace=True)
-            
-                for rock_type, numeric_value in mapping_stats.items():
-                    df_numeric_stats[rock_type] = [numeric_value]
-            
-                copy_df_stats['Formation'] = copy_df_stats['Formation'].replace(mapping_stats)
-                copy_df_stats = copy_df_stats.apply(pd.to_numeric, errors='coerce')
+        
+                copy_df_stats = copy_df_stats.drop('Formation', axis=1, inplace=True)
 
                 if 'copy_df_stats' not in st.session_state:
                     st.session_state.copy_df_stats = copy_df_stats
-
-                if 'df_numeric_stats' not in st.session_state:
-                    st.session_state.df_numeric_stats = df_numeric_stats
                     
                 figure = correlation_matrix_plot(st.session_state.copy_df_stats)
                 st.plotly_chart(figure)
-
-                st.table(data=st.session_state.df_numeric_stats)
-                a = st.session_state.copy_df_stats.info()
-                st.write(a)
-
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
 
