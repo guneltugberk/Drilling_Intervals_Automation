@@ -3,7 +3,7 @@ pandas
 numpy
 openpyxl
 scipy
-plotly.express
-matplotlib.pyplot
+plotly
+matplotlib
 seaborn
 time
