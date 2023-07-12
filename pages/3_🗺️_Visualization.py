@@ -9,10 +9,32 @@ st.title('Visualization')
 st.divider()
 
 
+@st.cache_data(ttl=3600)
+def correlation_correction(copy_df):
+    import pandas as pd
+
+    rock_types = copy_df['Formation'].unique()
+
+    mapping = {formation: i for i, formation in enumerate(rock_types)}
+    df = pd.DataFrame(columns=rock_types)
+
+    if 'None' in df.columns:
+        df.drop('None', axis=1, inplace=True)
+
+    for rock_type, numeric_value in mapping.items():
+        print(rock_type, numeric_value)
+        df[rock_type] = [numeric_value]
+
+    copy_df['Formation'] = copy_df['Formation'].replace(mapping)
+
+    return copy_df, df
+
+
+@st.cache_resource(ttl=3600)
 def correlation_matrix_plot(data):
     import plotly.express as px
 
-    corr_matrix = data.corr()
+    corr_matrix = data.corr(numeric_only=True)
 
     fig = px.imshow(corr_matrix,
                     color_continuous_scale='RdBu',
@@ -20,9 +42,13 @@ def correlation_matrix_plot(data):
                     title="Correlation Matrix Plot")
 
     fig.update_layout(width=600, height=600)
-    st.plotly_chart(fig)
+
+    print(corr_matrix)
+
+    return fig
 
 
+@st.cache_resource(ttl=3600)
 def feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option, water_depth, data):
     import plotly.express as px
     import plotly.graph_objects as go
@@ -52,7 +78,8 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
     fig.update_yaxes(showspikes=True)
     fig.update_traces(marker=dict(size=8))
     fig.update_layout(height=600, hovermode='closest')
-    st.plotly_chart(fig)
+
+    return fig
 
 
 def Select():
@@ -90,13 +117,37 @@ def main():
             # Perform actions based on the selected options
             if visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Prior Data':
                 st.subheader(f'The Correlation Matrix Plot with Prior Data of {st.session_state.file_name}')
+                correct_data = correlation_correction(st.session_state.dropped_data.copy())[0]
+                numeric_data = correlation_correction(st.session_state.dropped_data.copy())[1]
 
-                correlation_matrix_plot(st.session_state.dropped_data)
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    figure = correlation_matrix_plot(correct_data)
+                    st.plotly_chart(figure)
+
+                with col2:
+                    pass
+
+                with col3:
+                    st.table(data=numeric_data)
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
                 st.subheader(f'The Correlation Matrix Plot with Stats Data of {st.session_state.file_name}')
+                correct_data = correlation_correction(st.session_state.stats_table.copy())[0]
+                numeric_data = correlation_correction(st.session_state.stats_table.copy())[1]
 
-                correlation_matrix_plot(st.session_state.stats_table)
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    figure = correlation_matrix_plot(correct_data)
+                    st.plotly_chart(figure)
+
+                with col2:
+                    pass
+
+                with col3:
+                    st.table(data=numeric_data)
 
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
@@ -119,8 +170,10 @@ def main():
                 if st.button('Confirm Selection'):
 
                     if st.session_state.formation_water:
-                        feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                        figure = feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
                                                    st.session_state.formation_water, st.session_state.dropped_data)
+
+                        st.plotly_chart(figure)
 
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Stats Data':
@@ -141,8 +194,10 @@ def main():
 
                 if st.button('Confirm Selection'):
 
-                    feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                    figure = feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
                                                st.session_state.formation_water, st.session_state.stats_table)
+
+                    st.plotly_chart(figure)
 
 
 if __name__ == '__main__':
