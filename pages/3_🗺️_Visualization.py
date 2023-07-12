@@ -129,7 +129,7 @@ def main():
                 figure = correlation_matrix_plot(st.session_state.correct_data_prior)
                 st.plotly_chart(figure)
         
-                st.table(data=numeric_data)
+                st.table(data=st.session_state.numeric_data_prior)
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
                 st.subheader(f'The Correlation Matrix Plot with Stats Data of {st.session_state.file_name}')
@@ -145,7 +145,7 @@ def main():
                 figure = correlation_matrix_plot(st.session_state.correct_data_stats)
                 st.plotly_chart(figure)
 
-                st.table(data=numeric_data)
+                st.table(data=st.session_state.numeric_data_stats)
 
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
