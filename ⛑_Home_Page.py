@@ -67,13 +67,7 @@ def main():
     )
 
 
-    st.markdown("""
-    <div style="background-color: #ffdd00; padding: 10px; border-radius: 5px;">
-        <span style="color: #ff0000; font-weight: bold;">Warning:</span>
-        This project is created without the expectation of economic purposes.
-    </div>
-    """, 
-    unsafe_allow_html=True)
+    st.warning("This project is created without the expectation of economic purposes.", icon="❗")
     
     st.markdown(
         """
