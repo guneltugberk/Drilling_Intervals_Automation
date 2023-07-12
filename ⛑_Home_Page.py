@@ -67,19 +67,6 @@ def main():
     )
 
 
-
-    st.markdown(
-        """
-        <div class="stInfo">
-            This web app is created by Berat Tuğberk Günel. The datasets used during the development process are acquired from TU Bergakademie Freiberg.
-        </div>
-        <div class="stInfo">
-            This project is developed under the supervision of Prof. Dr. Matthias Reich and Dr. Silke Röntzsch.
-        </div>
-        """
-        , unsafe_allow_html=True
-    )
-
     st.markdown(
         """
         <div class="stMarkdown">
