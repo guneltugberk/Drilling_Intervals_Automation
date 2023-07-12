@@ -22,6 +22,14 @@ def main():
             margin-bottom: 20px;
         }
 
+        .stHeader {
+            font-size: 25px;
+            font-weight: bold;
+            color: #FF9933;
+            margin-bottom: 5px;
+        
+        }
+
         .stInfo {
             font-size: 18px;
             line-height: 1.6;
@@ -31,7 +39,7 @@ def main():
         .stMarkdown {
             font-size: 16px;
             line-height: 1.6;
-            color: #333333;
+            color: #ffffff;
         }
         </style>
         """
@@ -41,10 +49,6 @@ def main():
     st.markdown(
         """
         <div class="stTitle">Drilling Data Automation System</div>
-        <div class="stSidebar">
-            <div class="stSpinner">Loading...</div>
-            <div class="stInfo">Please start with <strong>Data Preprocessing</strong></div>
-        </div>
         """
         , unsafe_allow_html=True
     )
@@ -83,14 +87,14 @@ def main():
             <br><br>
             <strong>👈 Please select an option from the sidebar</strong>
             <br><br>
-            <h3>What does this project include?</h3>
+            <div class="stHeader">What does this project include?</div>
             <ul>
                 <li>Data Preprocessing</li>
                 <li>Statistical Automation for Identification of Drilling Data</li>
                 <li>Visualizations</li>
                 <li>Machine Learning Model to Predict -Still developing-</li>
             </ul>
-            <h3>To contact me or the professors:</h3>
+            <div class="stHeader">To contact me or the professors:</div>
             <h4>Berat Tuğberk Günel</h4>
             <ul>
                 <li>Use my e-mail: gunel18@itu.edu.tr</li>
