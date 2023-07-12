@@ -117,37 +117,35 @@ def main():
             # Perform actions based on the selected options
             if visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Prior Data':
                 st.subheader(f'The Correlation Matrix Plot with Prior Data of {st.session_state.file_name}')
-                correct_data = correlation_correction(st.session_state.dropped_data.copy())[0]
-                numeric_data = correlation_correction(st.session_state.dropped_data.copy())[1]
+                correct_data_prior = correlation_correction(st.session_state.dropped_data.copy())[0]
+                numeric_data_prior = correlation_correction(st.session_state.dropped_data.copy())[1]
 
-                col1, col2, col3 = st.columns(3)
+                if 'correct_data_prior' not in st.session_state:
+                    st.session_state.correct_data_prior = correct_data_prior
 
-                with col1:
-                    figure = correlation_matrix_plot(correct_data)
-                    st.plotly_chart(figure)
-
-                with col2:
-                    pass
-
-                with col3:
-                    st.table(data=numeric_data)
+                if 'numeric_data_prior' not in st.session_state:
+                    st.session_state.numeric_data_prior = numeric_data_prior
+                    
+                figure = correlation_matrix_plot(st.session_state.correct_data_prior)
+                st.plotly_chart(figure)
+        
+                st.table(data=numeric_data)
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
                 st.subheader(f'The Correlation Matrix Plot with Stats Data of {st.session_state.file_name}')
-                correct_data = correlation_correction(st.session_state.stats_table.copy())[0]
-                numeric_data = correlation_correction(st.session_state.stats_table.copy())[1]
+                correct_data_stats = correlation_correction(st.session_state.stats_table.copy())[0]
+                numeric_data_stats = correlation_correction(st.session_state.stats_table.copy())[1]
 
-                col1, col2, col3 = st.columns(3)
+                if 'correct_data_stats' not in st.session_state:
+                    st.session_state.correct_data_stats = correct_data_stats
 
-                with col1:
-                    figure = correlation_matrix_plot(correct_data)
-                    st.plotly_chart(figure)
+                if 'numeric_data_stats' not in st.session_state:
+                    st.session_state.numeric_data_stats = numeric_data_stats
+                    
+                figure = correlation_matrix_plot(st.session_state.correct_data_stats)
+                st.plotly_chart(figure)
 
-                with col2:
-                    pass
-
-                with col3:
-                    st.table(data=numeric_data)
+                st.table(data=numeric_data)
 
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
