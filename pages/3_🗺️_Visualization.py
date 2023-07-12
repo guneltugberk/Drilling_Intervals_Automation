@@ -151,7 +151,7 @@ def main():
                 st.plotly_chart(figure)
 
                 st.table(data=st.session_state.df_numeric_stats)
-                a = st.session_state.copy_df_stats.info()
+                a = st.session_state.copy_df_stats.head()
                 st.write(a)
 
 
