@@ -13,9 +13,9 @@ def main():
     )
 
     st.title("Drilling Data Automation System")
-    st.sidebar.spinner("Loading...")
-
+    
     with st.sidebar:
+        st.spinner("Loading...")
         time.sleep(2)
         st.info("Please start with *Data Preprocessing*")
 
