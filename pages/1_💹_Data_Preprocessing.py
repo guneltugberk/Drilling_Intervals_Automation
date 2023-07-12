@@ -8,6 +8,7 @@ class Upload:
 
     def read_file(self):
         import pandas as pd
+        import openpyxl
 
         if self.data_source.name.endswith(".xlsx"):
             # Read Excel file
