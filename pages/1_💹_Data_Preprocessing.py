@@ -1,3 +1,5 @@
+import streamlit as st
+
 class Upload:
     def __init__(self, data_source, sheet_name):
         self.df = None
