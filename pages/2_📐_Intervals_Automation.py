@@ -430,7 +430,10 @@ def main():
         error_rate = st.number_input('**Error Rate, in %**', min_value=0, max_value=100)
         threshold = st.number_input('**Threshold, an integer**', min_value=1, max_value=15)
 
-        st.markdown(f'### Encountered Formations for *{file_name_without_extension}*')
+        st.markdown(f"""
+        <div class='stHeader'>Encountered Formations for <i>{file_name_without_extension}</i></div>
+        """, unsafe_allow_html=True)
+        
         num_intervals = st.number_input('**Number of Formation Interval**', min_value=1, value=3, step=1)
         depth_intervals = []
         formations = []
@@ -495,10 +498,11 @@ def main():
                 st.table(data=st.session_state.prior_data.describe())
                 st.divider()
 
-                try:
-                    prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
-                    stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
-               
+                
+                prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
+                stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
+
+                if not prior_data_rocks.empty and not stats_data_rocks.empty:
                     if 'prior_data_rocks' not in st.session_state:
                         st.session_state.prior_data_rocks = prior_data_rocks
     
@@ -530,7 +534,7 @@ def main():
                                           data=stats_data_rocks_excel,
                                           file_name='Interval_data.xlsx')
                     
-                except:
+                else:
                     st.error('According to the algorithm, the dataset is found to be not convenient.', icon='🛑')
 
             elif st.session_state.flag == 0:
