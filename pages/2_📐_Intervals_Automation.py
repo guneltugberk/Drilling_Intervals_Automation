@@ -350,7 +350,7 @@ def main():
     """
     <style>
     .stTitle {
-        font-size 40px;
+        font-size: 40px;
         font-weight: bold;
         color: #FF9933;
         margin-bottom: 20px;
@@ -373,9 +373,11 @@ def main():
     """
     , unsafe_allow_html=True
     )
+    
     st.markdown("""
     <div class='stTitle'>Drilling Intervals Automation</div>
     """, unsafe_allow_html=True)
+    
     st.divider()
 
     if 'dropped_data' not in st.session_state:
@@ -395,7 +397,10 @@ def main():
         if 'file_name' not in st.session_state:
             st.session_state.file_name = file_name_without_extension
 
-        st.subheader(f'Drilling Interval Properties for *{file_name_without_extension}*')
+        st.markdown(f"""
+        <div class='stHeader'>Drilling Interval Properties for <i>{file_name_without_extension}</i></div>
+        """, unsafe_allow_html=True)
+        
         st.info(
             'The following columns that are chosen by default, are necessary to select before proceeding the calculations. If these columns are not found, the algorithm will be giving an error.')
 
@@ -461,7 +466,10 @@ def main():
                 intervals = Intervals.CalculateIntervals(st.session_state.prior_data, columns, pipe_length, error_rate)[1]
                 counted_interval = Intervals.CalculateIntervals(st.session_state.prior_data, columns, pipe_length, error_rate)[2]
 
-                st.subheader(f'*{file_name_without_extension}* After Outlier Removal Statistics')
+                st.markdown(f"""
+                <div class='stHeader'><i>{file_name_without_extension}</i> After Outlier Removal Statistics</div>
+                """, unsafe_allow_html=True)
+                
                 st.table(data=st.session_state.prior_data.describe())
                 st.divider()
 
@@ -476,7 +484,9 @@ def main():
                     if 'stats_data_rocks' not in st.session_state:
                         st.session_state.stats_data_rocks = stats_data_rocks
 
-                    st.subheader(f'*{file_name_without_extension}* Intervals Data')
+                    st.markdown(f"""
+                    <div class='stHeader'><i>{file_name_without_extension}</i> Intervals Data</div>
+                    """, unsafe_allow_html=True)
 
                     st.table(data=st.session_state.stats_data_rocks)
                     st.caption(f'**Calculated Number of Intervals:** {counted_interval}')
