@@ -1,11 +1,5 @@
 import streamlit as st
 
-st.set_page_config(
-    page_title="Drilling Intervals Automation",
-    page_icon="📐"
-)
-
-
 @st.cache_resource
 class Intervals:
     @staticmethod
@@ -347,7 +341,41 @@ def main():
     import pandas as pd
     import numpy as np
 
-    st.title("Drilling Intervals Automation")
+    st.set_page_config(
+    page_title="Drilling Intervals Automation",
+    page_icon="📐"
+    )
+
+    st.markdown(
+    """
+    <style>
+    .stTitle {
+        font-size 40px;
+        font-weight: bold;
+        color: #FF9933;
+        margin-bottom: 20px;
+    }
+
+    .stHeader {
+        font-size: 30px;
+        font-weight: bold;
+        color: #FF9933;
+        margin-bottom: 5px;
+    
+    }
+
+    .stMarkdown {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #ffffff;
+    }
+    </style>
+    """
+    , unsafe_allow_html=True
+    )
+    st.markdown("""
+    <div class='stTitle'>Drilling Intervals Automation</div>
+    """)
     st.divider()
 
     if 'dropped_data' not in st.session_state:
