@@ -474,10 +474,10 @@ def main():
                 st.divider()
 
                 try:
-
+                    
                     prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
                     stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
-
+                    st.write('Girdim')
                     if 'prior_data_rocks' not in st.session_state:
                         st.session_state.prior_data_rocks = prior_data_rocks
 
