@@ -73,6 +73,8 @@ def main():
         , unsafe_allow_html=True
     )
     
+    add_logo()
+    
     with st.sidebar:
         st.spinner("Loading...")
         time.sleep(2)
