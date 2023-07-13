@@ -1,13 +1,5 @@
 import streamlit as st
 
-st.set_page_config(
-    page_title='Data Uploading and Preprocessing',
-    page_icon='💹'
-)
-
-st.title("Data Uploading and Preprocessing")
-
-
 class Upload:
     def __init__(self, data_source, sheet_name):
         self.df = None
@@ -89,6 +81,43 @@ def main():
     import time
     import pandas as pd
 
+    st.set_page_config(
+    page_title='Data Uploading and Preprocessing',
+    page_icon='💹'
+    )
+
+
+        st.markdown(
+        """
+        <style>
+        .stTitle {
+            font-size: 40px;
+            font-weight: bold;
+            color: #FF9933;
+            margin-bottom: 20px;
+        }
+
+        .stHeader {
+            font-size: 30px;
+            font-weight: bold;
+            color: #FF9933;
+            margin-bottom: 5px;
+        
+        }
+
+        .stMarkdown {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #ffffff;
+        }
+        </style>
+        """
+        , unsafe_allow_html=True
+    )
+    st.markdown("""
+        <div class='.stTitle'> Data Preprocessing </div>
+    """, unsafe_allow_html=True)
+
     st.info("Uploaded dataset must include the following features")
 
     data = [['Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation',
@@ -125,7 +154,9 @@ def main():
 
     if st.session_state.confirm_upload:
         with st.form('Processing'):
-            st.subheader('Processing Data')
+            st.markdown("""
+                <div class='.stHeader'> Processing Data</div>
+            """, unsafe_allow_html=True)
 
             if 'confirm_process' not in st.session_state:
                 st.session_state.confirm_process = False
@@ -153,13 +184,13 @@ def main():
 
                     if file_name.endswith(".xlsx"):
                         file_name_without_extension = file_name[:-5]
-                        st.subheader(f'**Name of the Well:** *{file_name_without_extension}*')
+                        st.markdown(f"""<div class='.stHeader'>Name of the Well: *{file_name_without_extension}*</div>""", unsafe_allow_html=True)
 
                         refresh = True
 
                     elif file_name.endswith(".csv"):
                         file_name_without_extension = file_name[:-4]
-                        st.subheader(f'**Name of the Well:** *{file_name_without_extension}*')
+                        st.markdown(f"""<div class='.stHeader'>Name of the Well: *{file_name_without_extension}*</div>""", unsafe_allow_html=True)
 
                         refresh = True
 
@@ -185,7 +216,9 @@ def main():
                     st.caption(f'**Number of Observations:** *{num_obs}*')
                     st.divider()
 
-                    st.subheader('Number of Missing Values')
+                    st.markdown("""
+                    <div class='.stHeader'>Number of Missing Values</div>
+                    """, unsafe_allow_html_True)
                     missing_values = st.session_state.processed_data.isna().sum()
 
                     st.table(data=missing_values)
@@ -196,7 +229,9 @@ def main():
         if 'processed_data' in st.session_state:
             if missing_values.sum() > 0:
                 with st.form('MissingData'):
-                    st.subheader("Handling with Missing Data")
+                    st.markdown("""
+                    <div class='.stHeader'>Handling with Missing Data</div>
+                    """, unsafe_allow_html=True)
                     option = st.selectbox(
                         '**How would you like to manipulate the data?**',
                         ('Drop NaN', 'Impute NaN'))
@@ -215,7 +250,10 @@ def main():
                             if st.session_state.dropped_data is not None:
                                 st.success('**All missing values are dropped!**', icon="✅")
 
-                                st.subheader('Number of Missing values')
+                                st.markdown("""
+                                <div class='.stHeader'>Number of Missing values</div>
+                                """, unsafe_allow_html=True)
+                                
                                 st.table(data=dropped_data.isna().sum())
 
                             elif st.session_state.dropped_data is None:
