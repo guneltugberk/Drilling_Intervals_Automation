@@ -91,7 +91,7 @@ class Intervals:
         depth = np.array(data['Teufe [m]'].values)
         deltaTime = np.array(data['Delta Zeit [s]'].values)
 
-        interval_count = round(round(max(depth)) / interval_size)
+        interval_count = round((max(depth) - min(depth)) / interval_size)
         start_index = 0
         depth_interval = []
         time_interval = []
