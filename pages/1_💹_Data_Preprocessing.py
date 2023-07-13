@@ -87,33 +87,33 @@ def main():
     )
 
 
-        st.markdown(
-        """
-        <style>
-        .stTitle {
-            font-size: 40px;
-            font-weight: bold;
-            color: #FF9933;
-            margin-bottom: 20px;
-        }
+    st.markdown(
+    """
+    <style>
+    .stTitle {
+        font-size: 40px;
+        font-weight: bold;
+        color: #FF9933;
+        margin-bottom: 20px;
+    }
 
-        .stHeader {
-            font-size: 30px;
-            font-weight: bold;
-            color: #FF9933;
-            margin-bottom: 5px;
-        
-        }
+    .stHeader {
+        font-size: 30px;
+        font-weight: bold;
+        color: #FF9933;
+        margin-bottom: 5px;
+    
+    }
 
-        .stMarkdown {
-            font-size: 16px;
-            line-height: 1.6;
-            color: #ffffff;
-        }
-        </style>
-        """
-        , unsafe_allow_html=True
-    )
+    .stMarkdown {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #ffffff;
+    }
+    </style>
+    """
+    , unsafe_allow_html=True
+)
     st.markdown("""
         <div class='.stTitle'> Data Preprocessing </div>
     """, unsafe_allow_html=True)
