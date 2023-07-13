@@ -535,7 +535,6 @@ def main():
                         st.download_button(label='Download Interval Data',
                                           data=stats_data_rocks_excel,
                                           file_name='Interval_data.xlsx')
-                    st.divider()
                     
                 else:
                     st.error('According to the algorithm, the dataset is found to be not convenient.', icon='🛑')
@@ -563,7 +562,7 @@ def main():
                 if 'display' not in st.session_state:
                     st.session_state.display = False
 
-                st.form_submit_button('Display the Plot', on_click=Display, type='primary')
+                st.form_submit_button('Display Plot', on_click=Display, type='primary')
 
                 if st.session_state.display:
                     interval_depths, interval_times = Intervals.CalculateIntervals(st.session_state.prior_data,
