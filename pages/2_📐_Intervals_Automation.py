@@ -6,7 +6,7 @@ st.set_page_config(
 )
 
 
-@st.cache_resource(ttl=3600)
+@st.cache_resource
 class Intervals:
     @staticmethod
     def outliers(data, cols, threshold):
@@ -237,6 +237,39 @@ class Intervals:
 
         return statistical_df, statistical_df.shape[0], interval_count, depth_interval, time_interval
 
+    @staticmethod
+    def Formations(data_set, depth_intervals, formations, data_type):
+        # Create a list to store the formations for each interval
+        interval_formations = []
+
+        if data_type == 'prior data':
+            for depth in data_set.loc[:, 'Teufe [m]']:
+                assigned_formation = None
+
+                # Check if the depth falls within any interval
+                for i, interval in enumerate(depth_intervals):
+                    if interval[0] <= depth <= interval[1]:
+                        assigned_formation = formations[i]
+                        break
+
+                interval_formations.append(assigned_formation)
+
+        elif data_set == 'stats data':
+            for depth in data_set.loc[:, 'Teufe [m] Mean']:
+                assigned_formation = None
+
+                # Check if the depth falls within any interval
+                for i, interval in enumerate(depth_intervals):
+                    if interval[0] <= depth <= interval[1]:
+                        assigned_formation = formations[i]
+                        break
+
+                interval_formations.append(assigned_formation)
+
+        data_set.loc[:, 'Formation'] = interval_formations
+
+        return data_set
+
 
 def Start():
     st.session_state.start = True
@@ -404,40 +437,20 @@ def main():
                 st.table(data=st.session_state.prior_data.describe())
                 st.divider()
 
-                # Create a list to store the formations for each interval
-                interval_formations = []
-                interval_formations_dropped = []
-
                 try:
-                    for depth in st.session_state.stats_data.loc[:, 'Teufe [m] Mean']:
-                        assigned_formation = None
 
-                        # Check if the depth falls within any interval
-                        for i, interval in enumerate(depth_intervals):
-                            if interval[0] <= depth <= interval[1]:
-                                assigned_formation = formations[i]
-                                break
+                    prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
+                    stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
 
-                        interval_formations.append(assigned_formation)
+                    if 'prior_data_rocks' not in st.session_state:
+                        st.session_state.prior_data_rocks = prior_data_rocks
 
-                    for depth_dropped in st.session_state.prior_data.loc[:, 'Teufe [m]']:
-                        assigned_formation_dropped = None
-
-                        for j, interval_dropped in enumerate(depth_intervals):
-                            if interval_dropped[0] <= depth_dropped <= interval_dropped[1]:
-                                assigned_formation_dropped = formations[j]
-                                break
-
-                        interval_formations_dropped.append(assigned_formation_dropped)
-
-                    # Add the Formations column to the stats_table
-                    st.session_state.stats_data.loc[:, 'Formation'] = interval_formations
-                    st.session_state.prior_data.loc[:, 'Formation'] = interval_formations_dropped
-
+                    if 'stats_data_rocks' not in st.session_state:
+                        st.session_state.stats_data_rocks = stats_data_rocks
 
                     st.subheader(f'*{file_name_without_extension}* Intervals Data')
 
-                    st.table(data=st.session_state.stats_data)
+                    st.table(data=st.session_state.stats_data_rocks)
                     st.caption(f'**Calculated Number of Intervals:** {counted_interval}')
                     st.caption(f'**Number of Intervals in Dataset:** {intervals}')
 
