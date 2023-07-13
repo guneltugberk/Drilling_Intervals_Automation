@@ -60,6 +60,19 @@ class Intervals:
         return data_frame
 
     @staticmethod
+    def Energy(data):
+        energy = []
+
+        for p, q in zip(data.loc[:, 'p Luft [bar]'], data.loc[:, 'Q Luft [Nm3/min]']):
+            energy_value = (p * 14.503 * q * 264.172052) / 1714
+            energy_value = energy_value * 0.745699872
+            energy.append(energy_value)
+
+        data.loc[:, 'Hydraulic Power [kW]'] = energy
+
+        return data
+
+    @staticmethod
     def CalculateIntervals(data, cols, interval_size, error):
         import pandas as pd
         import numpy as np
@@ -76,6 +89,9 @@ class Intervals:
             if col == 'Zeit [s]' or col == 'Teufe [m]':
                 if np.isnan(data[col]).any() or len(data[col]) == 0:
                     st.warning('Dataset contains missing or empty values in the critical features.')
+
+        if 'p Luft [bar]' in cols and 'Q Luft [Nm3/min]' in cols:
+            cols.append('Hydraulic Power [kW]')
 
         depth = np.array(data['Teufe [m]'].values)
         deltaTime = np.array(data['Delta Zeit [s]'].values)
@@ -230,20 +246,6 @@ def Display():
     st.session_state.display = True
 
 
-@st.cache_resource(ttl=3600)
-def Energy(data):
-    energy = []
-
-    for p, q in zip(data.loc[:, 'p Luft [bar]'], data.loc[:, 'Q Luft [Nm3/min]']):
-        energy_value = (p * 14.503 * q * 264.172052) / 1714
-        energy_value = energy_value * 0.745699872
-        energy.append(energy_value)
-
-    data.loc[:, 'Hydraulic Power [kW]'] = energy
-
-    return data
-
-
 def Control(data, cols, length, error, int_depth, rocks, number_of_intervals):
     required_columns = ["Zeit [s]", "Delta Zeit [s]", "Teufe [m]", "Delta Teufe [m]"]
     flag_control = -3
@@ -380,7 +382,11 @@ def main():
             if st.session_state.flag == 1:
                 available_data = Intervals.outliers(st.session_state.dropped_data, columns, threshold)
 
-                prior_data = Energy(available_data)
+                if 'p Luft [bar]' in columns and 'Q Luft [Nm3/min]' in columns:
+                    prior_data = Intervals.Energy(available_data)
+
+                else:
+                    prior_data = available_data
 
                 if 'prior_data' not in st.session_state:
                     st.session_state.prior_data = prior_data
@@ -401,8 +407,6 @@ def main():
                 # Create a list to store the formations for each interval
                 interval_formations = []
                 interval_formations_dropped = []
-
-                # Iterate over the Teufe_Mean column and assign formations to intervals
 
                 try:
                     for depth in st.session_state.stats_data.loc[:, 'Teufe [m] Mean']:
@@ -455,6 +459,7 @@ def main():
                 st.warning('Please fill the above entries to proceed into calculations!', icon='💹')
             else:
                 st.error('Something went wrong!')
+
 
         else:
             st.warning('Please press Start button to proceed!', icon='💹')
