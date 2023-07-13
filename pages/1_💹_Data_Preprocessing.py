@@ -115,7 +115,7 @@ def main():
     , unsafe_allow_html=True
 )
     st.markdown("""
-        <div class='.stTitle'> Data Preprocessing </div>
+        <div class='stTitle'> Data Preprocessing </div>
     """, unsafe_allow_html=True)
 
     st.info("Uploaded dataset must include the following features")
@@ -155,7 +155,7 @@ def main():
     if st.session_state.confirm_upload:
         with st.form('Processing'):
             st.markdown("""
-                <div class='.stHeader'> Processing Data</div>
+                <div class='stHeader'> Processing Data</div>
             """, unsafe_allow_html=True)
 
             if 'confirm_process' not in st.session_state:
@@ -184,13 +184,13 @@ def main():
 
                     if file_name.endswith(".xlsx"):
                         file_name_without_extension = file_name[:-5]
-                        st.markdown(f"""<div class='.stHeader'>Name of the Well: *{file_name_without_extension}*</div>""", unsafe_allow_html=True)
+                        st.markdown(f"""<div class='stHeader'>Name of the Well: *{file_name_without_extension}*</div>""", unsafe_allow_html=True)
 
                         refresh = True
 
                     elif file_name.endswith(".csv"):
                         file_name_without_extension = file_name[:-4]
-                        st.markdown(f"""<div class='.stHeader'>Name of the Well: *{file_name_without_extension}*</div>""", unsafe_allow_html=True)
+                        st.markdown(f"""<div class='stHeader'>Name of the Well: *{file_name_without_extension}*</div>""", unsafe_allow_html=True)
 
                         refresh = True
 
@@ -217,7 +217,7 @@ def main():
                     st.divider()
 
                     st.markdown("""
-                    <div class='.stHeader'>Number of Missing Values</div>
+                    <div class='stHeader'>Number of Missing Values</div>
                     """, unsafe_allow_html_True)
                     missing_values = st.session_state.processed_data.isna().sum()
 
@@ -230,7 +230,7 @@ def main():
             if missing_values.sum() > 0:
                 with st.form('MissingData'):
                     st.markdown("""
-                    <div class='.stHeader'>Handling with Missing Data</div>
+                    <div class='stHeader'>Handling with Missing Data</div>
                     """, unsafe_allow_html=True)
                     option = st.selectbox(
                         '**How would you like to manipulate the data?**',
@@ -251,7 +251,7 @@ def main():
                                 st.success('**All missing values are dropped!**', icon="✅")
 
                                 st.markdown("""
-                                <div class='.stHeader'>Number of Missing values</div>
+                                <div class='stHeader'>Number of Missing values</div>
                                 """, unsafe_allow_html=True)
                                 
                                 st.table(data=dropped_data.isna().sum())
