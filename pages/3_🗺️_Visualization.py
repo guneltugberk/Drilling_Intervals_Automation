@@ -165,7 +165,7 @@ def main():
                 st.table(data=numeric_data)
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
-                st.markdowm(f"""
+                st.markdown(f"""
                 <div class='stHeader'>The Correlation Matrix Plot with Stats Data of <i>{st.session_state.file_name}</i></div>
                 """, unsafe_allow_html=True)
                 correct_data = correlation_correction(st.session_state.stats_data_rocks)[0]
