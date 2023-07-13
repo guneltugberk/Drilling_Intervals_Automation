@@ -198,6 +198,8 @@ def main():
                     st.warning('**Please go back into previous page to specify Formation Water Depth**')
 
                 if st.button('Confirm Selection'):
+                    if 'Formation' in selected_columns_x or 'Formation' in selected_columns_y:
+                        st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='💹')
 
                     if st.session_state.formation_water:
                         feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
@@ -223,9 +225,12 @@ def main():
                     st.warning('**Please go back into previous page to specify Formation Water Depth**')
 
                 if st.button('Confirm Selection'):
+                    if 'Formation' in selected_columns_x or 'Formation' in selected_columns_y:
+                        st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='💹')
 
-                    feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
-                                               st.session_state.formation_water, st.session_state.stats_data_rocks)
+                    if st.session_state.formation_water:
+                        feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                                                   st.session_state.formation_water, st.session_state.stats_data_rocks)
 
 
 if __name__ == '__main__':
