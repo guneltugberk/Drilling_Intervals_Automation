@@ -238,6 +238,7 @@ class Intervals:
         interval_formations = []
 
         if data_type == 'prior data':
+            print('prior_data içeride')
             for depth in data_set.loc[:, 'Teufe [m]']:
                 assigned_formation = None
 
@@ -250,6 +251,7 @@ class Intervals:
                 interval_formations.append(assigned_formation)
 
         elif data_set == 'stats data':
+            print('stats_data içeride')
             for depth in data_set.loc[:, 'Teufe [m] Mean']:
                 assigned_formation = None
 
