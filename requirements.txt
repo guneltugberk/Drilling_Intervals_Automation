@@ -6,5 +6,4 @@ scipy
 plotly
 matplotlib
 seaborn
-io
 pyxlsb
