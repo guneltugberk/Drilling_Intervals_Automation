@@ -12,6 +12,7 @@ class Intervals:
     def outliers(data, cols, threshold):
         import pandas as pd
         import numpy as np
+        from scipy import stats
 
         data_frame = pd.DataFrame([])
 
