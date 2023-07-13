@@ -30,12 +30,6 @@ def main():
         
         }
 
-        .stInfo {
-            font-size: 18px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
         .stMarkdown {
             font-size: 16px;
             line-height: 1.6;
