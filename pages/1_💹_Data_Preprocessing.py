@@ -184,13 +184,13 @@ def main():
 
                     if file_name.endswith(".xlsx"):
                         file_name_without_extension = file_name[:-5]
-                        st.markdown(f"""<div class='stHeader'>Name of the Well: *{file_name_without_extension}*</div>""", unsafe_allow_html=True)
+                        st.markdown(f"""<div class='stHeader'>Name of the Well: <i>{file_name_without_extension}</i></div>""", unsafe_allow_html=True)
 
                         refresh = True
 
                     elif file_name.endswith(".csv"):
                         file_name_without_extension = file_name[:-4]
-                        st.markdown(f"""<div class='stHeader'>Name of the Well: *{file_name_without_extension}*</div>""", unsafe_allow_html=True)
+                        st.markdown(f"""<div class='stHeader'>Name of the Well: <i>{file_name_without_extension}</i></div>""", unsafe_allow_html=True)
 
                         refresh = True
 
