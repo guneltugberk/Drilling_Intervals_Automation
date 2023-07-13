@@ -518,8 +518,10 @@ def main():
                     st.caption(f'**Number of Intervals in Dataset:** {intervals}')
     
                     display_chart = True
-
-                    col1, col2 = st.columns(2, gap='medium')
+                    st.markdown("""
+                    <div class='stHeader'>Download the Resulted Datasets</div>
+                    """, unsafe_allow_html_True)
+                    col1, col2 = st.columns(2, gap='large')
 
                     prior_data_rocks_excel = Excel(st.session_state.prior_data_rocks, 'Prior Data')
                     stats_data_rocks_excel = Excel(st.session_state.stats_data_rocks, 'Interval Data')
@@ -533,6 +535,7 @@ def main():
                         st.download_button(label='Download Interval Data',
                                           data=stats_data_rocks_excel,
                                           file_name='Interval_data.xlsx')
+                    st.divider()
                     
                 else:
                     st.error('According to the algorithm, the dataset is found to be not convenient.', icon='🛑')
