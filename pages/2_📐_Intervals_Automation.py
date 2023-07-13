@@ -238,7 +238,6 @@ class Intervals:
         interval_formations = []
 
         if data_type == 'prior data':
-            print('prior_data içeride')
             for depth in data_set.loc[:, 'Teufe [m]']:
                 assigned_formation = None
 
@@ -252,8 +251,7 @@ class Intervals:
                 
             data_set.loc[:, 'Formation'] = interval_formations
 
-        elif data_set == 'stats data':
-            print('stats_data içeride')
+        elif data_type == 'stats data':
             for depth in data_set.loc[:, 'Teufe [m] Mean']:
                 assigned_formation = None
 
@@ -478,26 +476,28 @@ def main():
                 st.table(data=st.session_state.prior_data.describe())
                 st.divider()
 
-                prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
-                stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
-           
-                if 'prior_data_rocks' not in st.session_state:
-                    st.session_state.prior_data_rocks = prior_data_rocks
-
-                if 'stats_data_rocks' not in st.session_state:
-                    st.session_state.stats_data_rocks = stats_data_rocks
-
-                st.markdown(f"""
-                <div class='stHeader'><i>{file_name_without_extension}</i> Intervals Data</div>
-                """, unsafe_allow_html=True)
-
-                st.table(data=st.session_state.stats_data_rocks)
-                st.caption(f'**Calculated Number of Intervals:** {counted_interval}')
-                st.caption(f'**Number of Intervals in Dataset:** {intervals}')
-
-                display_chart = True
-
-
+                try:
+                    prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
+                    stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
+               
+                    if 'prior_data_rocks' not in st.session_state:
+                        st.session_state.prior_data_rocks = prior_data_rocks
+    
+                    if 'stats_data_rocks' not in st.session_state:
+                        st.session_state.stats_data_rocks = stats_data_rocks
+    
+                    st.markdown(f"""
+                    <div class='stHeader'><i>{file_name_without_extension}</i> Intervals Data</div>
+                    """, unsafe_allow_html=True)
+    
+                    st.table(data=st.session_state.stats_data_rocks)
+                    st.caption(f'**Calculated Number of Intervals:** {counted_interval}')
+                    st.caption(f'**Number of Intervals in Dataset:** {intervals}')
+    
+                    display_chart = True
+                    
+                except:
+                    st.error('According to the algorithm, the dataset is found to be not convenient.', icon='🛑')
 
             elif st.session_state.flag == 0:
                 st.warning('Please do not forget to select the following columns: *Zeit*, *Teufe*, *Delta Zeit*', icon='💹')
