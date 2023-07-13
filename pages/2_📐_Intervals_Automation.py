@@ -249,6 +249,8 @@ class Intervals:
                         break
 
                 interval_formations.append(assigned_formation)
+                
+            data_set.loc[:, 'Formation'] = interval_formations
 
         elif data_set == 'stats data':
             print('stats_data içeride')
@@ -263,7 +265,7 @@ class Intervals:
 
                 interval_formations.append(assigned_formation)
 
-        data_set.loc[:, 'Formation'] = interval_formations
+            data_set.loc[:, 'Formation'] = interval_formations
 
         return data_set
 
