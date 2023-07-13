@@ -375,7 +375,7 @@ def main():
     )
     st.markdown("""
     <div class='stTitle'>Drilling Intervals Automation</div>
-    """)
+    """, unsafe_allow_html=True)
     st.divider()
 
     if 'dropped_data' not in st.session_state:
