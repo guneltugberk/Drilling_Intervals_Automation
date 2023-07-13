@@ -13,7 +13,10 @@ st.divider()
 def correlation_correction(copy_df):
     import pandas as pd
 
-    rock_types = copy_df['Formation'].unique()
+    # Make a copy of the DataFrame
+    df = copy_df.copy()
+
+    rock_types = df['Formation'].unique()
 
     mapping = {formation: i for i, formation in enumerate(rock_types)}
     df_numeric = pd.DataFrame(columns=rock_types)
@@ -24,9 +27,10 @@ def correlation_correction(copy_df):
     for rock_type, numeric_value in mapping.items():
         df_numeric[rock_type] = [numeric_value]
 
-    copy_df['Formation'] = copy_df['Formation'].replace(mapping)
+    # Modify the copied DataFrame
+    df['Formation'] = df['Formation'].replace(mapping)
 
-    return copy_df, df_numeric
+    return df, df_numeric
 
 
 @st.cache_resource(ttl=3600)
@@ -50,11 +54,13 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
     import plotly.express as px
     import plotly.graph_objects as go
 
+    color_palette = px.colors.sequential.Viridis_r
+
     if formation_option == 'Include Formations':
 
         fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
                          hover_name='Formation',
-                         title='Feature Investigation with Formations')
+                         title='Feature Investigation with Formations', color_discrete_sequence=color_palette)
     else:
         fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
                          title='Feature Investigation without Formations')
@@ -84,20 +90,20 @@ def Select():
 
 
 def main():
-    if 'stats_data' not in st.session_state:
-        st.session_state.stats_data = None
+    if 'stats_data_rocks' not in st.session_state:
+        st.session_state.stats_data_rocks = None
 
-    if 'prior_data' not in st.session_state:
-        st.session_state.prior_data = None
+    if 'prior_data_rocks' not in st.session_state:
+        st.session_state.prior_data_rocks = None
 
-    if st.session_state.prior_data is None and st.session_state.stats_data is None:
+    if st.session_state.prior_data_rocks is None and st.session_state.stats_data_rocks is None:
         st.warning('**To be able to proceed the calculations, please complete the step one and two**',
                    icon='❌')
-    elif st.session_state.prior_data is not None and st.session_state.stats_data is None:
+    elif st.session_state.prior_data_rocks is not None and st.session_state.stats_data_rocks is None:
         st.warning('**To be able to proceed the calculations, please complete the step two:** *Intervals Automation*',
                    icon='📐')
 
-    elif st.session_state.prior_data is not None and st.session_state.stats_data is not None:
+    elif st.session_state.prior_data_rocks is not None and st.session_state.stats_data_rocks is not None:
         # Add a slider to select the visualization type
         visualization_type = st.sidebar.selectbox("**Select Visualization Type**",
                                                   ['Correlation Matrix Plot', 'Feature Investigation'])
@@ -114,8 +120,8 @@ def main():
             # Perform actions based on the selected options
             if visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Prior Data':
                 st.subheader(f'The Correlation Matrix Plot with Prior Data of {st.session_state.file_name}')
-                correct_data = correlation_correction(st.session_state.prior_data.copy())[0]
-                numeric_data = correlation_correction(st.session_state.prior_data.copy())[1]
+                correct_data = correlation_correction(st.session_state.prior_data_rocks)[0]
+                numeric_data = correlation_correction(st.session_state.prior_data_rocks)[1]
 
                 figure = correlation_matrix_plot(correct_data)
                 st.plotly_chart(figure)
@@ -125,22 +131,23 @@ def main():
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
                 st.subheader(f'The Correlation Matrix Plot with Stats Data of {st.session_state.file_name}')
-                correct_data = correlation_correction(st.session_state.stats_data.copy())[0]
-                numeric_data = correlation_correction(st.session_state.stats_data.copy())[1]
+                correct_data = correlation_correction(st.session_state.stats_data_rocks)[0]
+                numeric_data = correlation_correction(st.session_state.stats_data_rocks)[1]
 
                 figure = correlation_matrix_plot(correct_data)
                 st.plotly_chart(figure)
 
                 st.subheader('Numerical Representation of Formations')
                 st.table(data=numeric_data)
+                st.write(st.session_state.stats_data.columns)
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
 
                 st.subheader(f'The Feature Investigation with Prior Data {st.session_state.file_name}')
                 st.info('X-axis and y-axis entry arguments accept only one feature at a time.')
 
-                selected_columns_x = st.selectbox("**Select x-axis**", st.session_state.prior_data.columns)
-                selected_columns_y = st.selectbox("**Select y-axis**", st.session_state.prior_data.columns)
+                selected_columns_x = st.selectbox("**Select x-axis**", st.session_state.prior_data_rocks.columns)
+                selected_columns_y = st.selectbox("**Select y-axis**", st.session_state.prior_data_rocks.columns)
 
                 formation_option = st.radio("**Formation Option**", ['Include Formations', 'Exclude Formations'])
 
@@ -154,7 +161,7 @@ def main():
 
                     if st.session_state.formation_water:
                         feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
-                                                   st.session_state.formation_water, st.session_state.prior_data)
+                                                   st.session_state.formation_water, st.session_state.prior_data_rocks)
 
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Stats Data':
@@ -162,8 +169,8 @@ def main():
                 st.subheader(f'The Feature Investigation with Stats Data of {st.session_state.file_name}')
                 st.info('X-axis and y-axis entry arguments accept only one feature at a time.')
 
-                selected_columns_x = st.selectbox("**Select x-axis**", st.session_state.stats_data.columns)
-                selected_columns_y = st.selectbox("**Select y-axis**", st.session_state.stats_data.columns)
+                selected_columns_x = st.selectbox("**Select x-axis**", st.session_state.stats_data_rocks.columns)
+                selected_columns_y = st.selectbox("**Select y-axis**", st.session_state.stats_data_rocks.columns)
 
                 formation_option = st.radio("**Formation Option**", ['Include Formations', 'Exclude Formations'])
 
@@ -176,7 +183,7 @@ def main():
                 if st.button('Confirm Selection'):
 
                     feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
-                                               st.session_state.formation_water, st.session_state.stats_data)
+                                               st.session_state.formation_water, st.session_state.stats_data_rocks)
 
 
 if __name__ == '__main__':
