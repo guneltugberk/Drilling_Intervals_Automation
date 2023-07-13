@@ -268,6 +268,25 @@ class Intervals:
         return data_set
 
 
+def Excel(df, sheet):
+    import pandas as pd
+    from io import BytesIO
+    from pyxlsb import open_workbook as open_xlsb
+    
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer, index=False, sheet_name='Sheet1')
+    workbook = writer.book
+    worksheet = writer.sheets[f'{sheet}']
+
+    format1 = workbook.add_format({'num_format': '0.00'}) 
+    worksheet.set_column('A:A', None, format1)  
+    writer.save()
+    processed_data = output.getvalue()
+
+    return processed_data
+
+
 def Start():
     st.session_state.start = True
 
@@ -495,6 +514,21 @@ def main():
                     st.caption(f'**Number of Intervals in Dataset:** {intervals}')
     
                     display_chart = True
+
+                    col1, col2 = st.columns(2, gap='medium')
+
+                    prior_data_rocks_excel = Excel(st.session_state.prior_data_rocks, 'Prior Data')
+                    stats_data_rocks_excel = Excel(st.session_state.stats_data_rocks, 'Interval Data')
+
+                    with col1:
+                        st.download_button(label='Download Prior Data',
+                                          data=prior_data_rocks_excel,
+                                          file_name='Prior_data.xlsx')
+
+                    with col2:
+                        st.download_button(label='Download Interval Data',
+                                          data=stats_data_rocks_excel,
+                                          file_name='Interval_data.xlsx')
                     
                 except:
                     st.error('According to the algorithm, the dataset is found to be not convenient.', icon='🛑')
