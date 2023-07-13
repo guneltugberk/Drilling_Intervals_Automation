@@ -1,8 +1,8 @@
 import streamlit as st
 
-@st.cache_resource
 class Intervals:
     @staticmethod
+    @st.cache_resource(ttl=3600)
     def outliers(data, cols, threshold):
         import pandas as pd
         import numpy as np
@@ -67,6 +67,7 @@ class Intervals:
         return data
 
     @staticmethod
+    @st.cache_resource(ttl=3600)
     def CalculateIntervals(data, cols, interval_size, error):
         import pandas as pd
         import numpy as np
