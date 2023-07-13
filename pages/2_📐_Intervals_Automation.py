@@ -6,13 +6,12 @@ st.set_page_config(
 )
 
 
-@st.cache_resource
+@st.cache_resource(ttl=3600)
 class Intervals:
     @staticmethod
     def outliers(data, cols, threshold):
         import pandas as pd
         import numpy as np
-        from scipy import stats
 
         data_frame = pd.DataFrame([])
 
@@ -230,6 +229,20 @@ def Display():
     st.session_state.display = True
 
 
+@st.cache_resource(ttl=3600)
+def Energy(data):
+    energy = []
+
+    for p, q in zip(data.loc[:, 'p Luft [bar]'], data.loc[:, 'Q Luft [Nm3/min]']):
+        energy_value = (p * 14.503 * q * 264.172052) / 1714
+        energy_value = energy_value * 0.745699872
+        energy.append(energy_value)
+
+    data.loc[:, 'Hydraulic Power [kW]'] = energy
+
+    return data
+
+
 def Control(data, cols, length, error, int_depth, rocks, number_of_intervals):
     required_columns = ["Zeit [s]", "Delta Zeit [s]", "Teufe [m]", "Delta Teufe [m]"]
     flag_control = -3
@@ -366,20 +379,22 @@ def main():
             if st.session_state.flag == 1:
                 available_data = Intervals.outliers(st.session_state.dropped_data, columns, threshold)
 
-                if 'available_data' not in st.session_state:
-                    st.session_state.available_data = available_data
+                prior_data = Energy(available_data)
 
-                stats_table = \
-                    Intervals.CalculateIntervals(st.session_state.available_data, columns, pipe_length, error_rate)[0]
+                if 'prior_data' not in st.session_state:
+                    st.session_state.prior_data = prior_data
 
-                if 'stats_table' not in st.session_state:
-                        st.session_state.stats_table = stats_table
+                stats_data = \
+                    Intervals.CalculateIntervals(st.session_state.prior_data, columns, pipe_length, error_rate)[0]
 
-                intervals = Intervals.CalculateIntervals(available_data, columns, pipe_length, error_rate)[1]
-                counted_interval = Intervals.CalculateIntervals(available_data, columns, pipe_length, error_rate)[2]
+                if 'stats_data' not in st.session_state:
+                    st.session_state.stats_data = stats_data
+
+                intervals = Intervals.CalculateIntervals(st.session_state.prior_data, columns, pipe_length, error_rate)[1]
+                counted_interval = Intervals.CalculateIntervals(st.session_state.prior_data, columns, pipe_length, error_rate)[2]
 
                 st.subheader(f'*{file_name_without_extension}* After Outlier Removal Statistics')
-                st.table(data=available_data.describe())
+                st.table(data=st.session_state.prior_data.describe())
                 st.divider()
 
                 # Create a list to store the formations for each interval
@@ -389,7 +404,7 @@ def main():
                 # Iterate over the Teufe_Mean column and assign formations to intervals
 
                 try:
-                    for depth in st.session_state.stats_table.loc[:, 'Teufe [m] Mean']:
+                    for depth in st.session_state.stats_data.loc[:, 'Teufe [m] Mean']:
                         assigned_formation = None
 
                         # Check if the depth falls within any interval
@@ -400,7 +415,7 @@ def main():
 
                         interval_formations.append(assigned_formation)
 
-                    for depth_dropped in st.session_state.dropped_data.loc[:, 'Teufe [m]']:
+                    for depth_dropped in st.session_state.prior_data.loc[:, 'Teufe [m]']:
                         assigned_formation_dropped = None
 
                         for j, interval_dropped in enumerate(depth_intervals):
@@ -411,17 +426,17 @@ def main():
                         interval_formations_dropped.append(assigned_formation_dropped)
 
                     # Add the Formations column to the stats_table
-                    st.session_state.stats_table['Formation'] = interval_formations
-                    st.session_state.dropped_data['Formation'] = interval_formations_dropped
+                    st.session_state.stats_data.loc[:, 'Formation'] = interval_formations
+                    st.session_state.prior_data.loc[:, 'Formation'] = interval_formations_dropped
+
 
                     st.subheader(f'*{file_name_without_extension}* Intervals Data')
 
-                    st.table(data=st.session_state.stats_table)
+                    st.table(data=st.session_state.stats_data)
                     st.caption(f'**Calculated Number of Intervals:** {counted_interval}')
                     st.caption(f'**Number of Intervals in Dataset:** {intervals}')
 
                     display_chart = True
-
 
                 except:
                     st.error('According to the algorithm, the dataset is found to be not convenient.')
@@ -440,7 +455,6 @@ def main():
             else:
                 st.error('Something went wrong!')
 
-
         else:
             st.warning('Please press Start button to proceed!', icon='💹')
 
@@ -452,11 +466,10 @@ def main():
                 st.form_submit_button('Display the Plot', on_click=Display, type='primary')
 
                 if st.session_state.display:
-                    interval_depths, interval_times = Intervals.CalculateIntervals(st.session_state.available_data,
+                    interval_depths, interval_times = Intervals.CalculateIntervals(st.session_state.prior_data,
                                                                                    columns, pipe_length, error_rate)[3:5]
 
-                    plot_intervals(interval_depths, interval_times, st.session_state.available_data)
-
+                    plot_intervals(interval_depths, interval_times, st.session_state.prior_data)
 
     else:
         st.warning('**This dataset is empty. Probably something went wrong. Please repeat the calculations.', icon='💹')
