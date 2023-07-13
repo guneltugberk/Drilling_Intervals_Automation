@@ -518,9 +518,9 @@ def main():
                     st.caption(f'**Number of Intervals in Dataset:** {intervals}')
     
                     display_chart = True
-                    st.markdown("""
-                    <div class='stHeader'>Download the Resulted Datasets</div>
-                    """, unsafe_allow_html_True)
+                    st.markdown(f"""
+                    <div class='stHeader'>Download the Resulted Datasets for <i>{file_name_without_extension}</i></div>
+                    """, unsafe_allow_html=True)
                     col1, col2 = st.columns(2, gap='large')
 
                     prior_data_rocks_excel = Excel(st.session_state.prior_data_rocks, 'Prior Data')
