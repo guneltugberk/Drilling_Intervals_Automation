@@ -218,7 +218,7 @@ def main():
 
                     st.markdown("""
                     <div class='stHeader'>Number of Missing Values</div>
-                    """, unsafe_allow_html_True)
+                    """, unsafe_allow_html=True)
                     missing_values = st.session_state.processed_data.isna().sum()
 
                     st.table(data=missing_values)
