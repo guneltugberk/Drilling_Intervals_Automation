@@ -1,13 +1,5 @@
 import streamlit as st
 
-st.set_page_config(
-    page_title="Visualization",
-    page_icon="🗺️"
-)
-
-st.title('Visualization')
-st.divider()
-
 
 @st.cache_data(ttl=3600)
 def correlation_correction(copy_df):
@@ -90,6 +82,45 @@ def Select():
 
 
 def main():
+    st.set_page_config(
+    page_title="Visualization",
+    page_icon="🗺️"
+    )
+
+    
+    st.markdown(
+    """
+    <style>
+    .stTitle {
+        font-size: 40px;
+        font-weight: bold;
+        color: #FF9933;
+        margin-bottom: 20px;
+    }
+
+    .stHeader {
+        font-size: 30px;
+        font-weight: bold;
+        color: #FF9933;
+        margin-bottom: 5px;
+    
+    }
+
+    .stMarkdown {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #ffffff;
+    }
+    </style>
+    """
+    , unsafe_allow_html=True
+    )
+
+    st.markdown("""
+    <div class='stTitle'>Visualization</div>
+    """, unsafe_allow_html=True)
+    st.divider()
+    
     if 'stats_data_rocks' not in st.session_state:
         st.session_state.stats_data_rocks = None
 
@@ -119,31 +150,40 @@ def main():
         if st.session_state.select:
             # Perform actions based on the selected options
             if visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Prior Data':
-                st.subheader(f'The Correlation Matrix Plot with Prior Data of {st.session_state.file_name}')
+                st.markdown(f"""
+                <div class='stHeader'>The Correlation Matrix Plot with Prior Data of <i>{st.session_state.file_name}</i></div>
+                """, unsafe_allow_html=True)
                 correct_data = correlation_correction(st.session_state.prior_data_rocks)[0]
                 numeric_data = correlation_correction(st.session_state.prior_data_rocks)[1]
 
                 figure = correlation_matrix_plot(correct_data)
                 st.plotly_chart(figure)
 
-                st.subheader('Numerical Representation of Formations')
+                st.markdown("""
+                <div class='stHeader'>Numerical Representation of Formations</div>
+                """, unsafe_allow_html=True)
                 st.table(data=numeric_data)
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
-                st.subheader(f'The Correlation Matrix Plot with Stats Data of {st.session_state.file_name}')
+                st.markdowm(f"""
+                <div class='stHeader'>The Correlation Matrix Plot with Stats Data of <i>{st.session_state.file_name}</i></div>
+                """, unsafe_allow_html=True)
                 correct_data = correlation_correction(st.session_state.stats_data_rocks)[0]
                 numeric_data = correlation_correction(st.session_state.stats_data_rocks)[1]
 
                 figure = correlation_matrix_plot(correct_data)
                 st.plotly_chart(figure)
 
-                st.subheader('Numerical Representation of Formations')
+                st.markdown("""
+                <div class='stHeader'>Numerical Representation of Formations</div>
+                """, unsafe_allow_html=True)
                 st.table(data=numeric_data)
-                st.write(st.session_state.stats_data.columns)
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
 
-                st.subheader(f'The Feature Investigation with Prior Data {st.session_state.file_name}')
+                st.markdown(f"""
+                <div class='stHeader'>The Feature Investigation with Prior Data <i>{st.session_state.file_name}</i></div>
+                """, unsafe_allow_html=True)
                 st.info('X-axis and y-axis entry arguments accept only one feature at a time.')
 
                 selected_columns_x = st.selectbox("**Select x-axis**", st.session_state.prior_data_rocks.columns)
@@ -166,7 +206,9 @@ def main():
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Stats Data':
 
-                st.subheader(f'The Feature Investigation with Stats Data of {st.session_state.file_name}')
+                st.markdown(f"""
+                <div class='stHeader'>The Feature Investigation with Stats Data of <i>{st.session_state.file_name}</i></div>
+                """, unsafe_allow_html=True)
                 st.info('X-axis and y-axis entry arguments accept only one feature at a time.')
 
                 selected_columns_x = st.selectbox("**Select x-axis**", st.session_state.stats_data_rocks.columns)
