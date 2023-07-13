@@ -5,7 +5,7 @@ def add_logo():
         """
         <style>
             [data-testid="stSidebarNav"] {
-                background-image: url(https://en.wikipedia.org/wiki/File:Logo_TU_Freiberg.svg);
+                background-image: url(https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Logo_TU_Freiberg.svg/2078px-Logo_TU_Freiberg.svg.png);
                 background-repeat: no-repeat;
                 padding-top: 120px;
                 background-position: 20px 20px;
