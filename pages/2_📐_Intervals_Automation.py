@@ -275,7 +275,7 @@ def Excel(df, sheet):
     
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    df.to_excel(writer, index=False, sheet_name='Sheet1')
+    df.to_excel(writer, index=False, sheet_name=sheet)
     workbook = writer.book
     worksheet = writer.sheets[sheet]
 
