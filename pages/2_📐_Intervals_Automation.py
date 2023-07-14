@@ -291,12 +291,12 @@ def Excel(df, sheet):
 
 
 def DI(dataframe):
-    dataframe.loc[:, 'Andruck [kPa] Mean'] = dataframe.loc[:, 'Andruck [bar] Mean'] * 100
-    dataframe.loc[:, 'Gravitational Force [kN] Mean'] = dataframe.loc[:, 'Andruck [kPa] Mean'] * math.pi * (0.152**2) / 4
+    dataframe.loc[:, 'Andruck [kPa]'] = dataframe.loc[:, 'Andruck [bar]'] * 100
+    dataframe.loc[:, 'Gravitational Force [kN]'] = dataframe.loc[:, 'Andruck [kPa]'] * math.pi * (0.152**2) / 4
 
     drillibility = []
 
-    for pr, n, w in zip(dataframe.loc[:, 'vB [m/h] Mean'], dataframe.loc[:, 'DZ [U/min] Mean'], dataframe.loc[:, 'Gravitational Force [kN] Mean']):
+    for pr, n, w in zip(dataframe.loc[:, 'vB [m/h]'], dataframe.loc[:, 'DZ [U/min]'], dataframe.loc[:, 'Gravitational Force [kN]']):
         di = (3.35 * n * w) / (15.2 * pr)
 
         drillibility.append(di)
