@@ -60,6 +60,10 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
                          hover_name='Formation',
                          title='Feature Investigation with Formations', color_discrete_sequence=color_palette)
         
+    elif add_linear_curve:
+        fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
+                         title='Feature Investigation without Formations', trendline='ols')
+        
     else:
         fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
                          title='Feature Investigation without Formations')
