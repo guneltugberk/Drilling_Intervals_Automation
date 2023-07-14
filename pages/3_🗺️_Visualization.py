@@ -50,11 +50,17 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
 
     color_palette = px.colors.sequential.Viridis_r
 
-    if formation_option == 'Include Formations':
+    if formation_option == 'Include Formations' and add_linear_curve:
 
         fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
                          hover_name='Formation',
+                         title='Feature Investigation with Formations', color_discrete_sequence=color_palette, trendline='ols')
+        
+    elif formation_option == 'Include Formations':
+        fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
+                         hover_name='Formation',
                          title='Feature Investigation with Formations', color_discrete_sequence=color_palette)
+        
     else:
         fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
                          title='Feature Investigation without Formations')
@@ -71,24 +77,6 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
 
         fig.update_layout(showlegend=True)
 
-        if add_linear_curve:
-            x_data = np.array(data_feature[selected_columns_x]).astype(float)
-            y_data = np.array(data_feature[selected_columns_y]).astype(float)
-    
-            slope, intercept, r_value, p_value, std_err = stats.linregress(x_data, y_data)
-            line = slope * x_data + intercept
-            equation = f'y = {slope:.2f}x + {intercept:.2f}'
-            r_squared = f'R-Squared: {r_value**2:.2f}'
-    
-            fig.add_trace(go.Scatter(
-                x=x_data,
-                y=line,
-                mode='lines',
-                line=dict(color='green', width=2),
-                hovertemplate=f'{equation}<br>{r_squared}',
-                showlegend=True,
-                name='Linear Curve Fit'
-            ))
             
     fig.update_xaxes(showspikes=True)
     fig.update_yaxes(showspikes=True)
