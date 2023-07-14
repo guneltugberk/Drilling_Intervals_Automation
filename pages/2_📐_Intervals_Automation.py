@@ -287,6 +287,22 @@ def Excel(df, sheet):
     return processed_data
 
 
+def DI(dataframe):
+    dataframe.loc[:, 'Andruck [kPa] Mean'] = dataframe.loc[:, 'Andruck [bar] Mean'] * 100
+    dataframe.loc[:, 'Gravitational Force [kN] Mean'] = dataframe.loc[:, 'Andruck [kPa] Mean'] * math.pi * (0.152**2) / 4
+
+    drillibility = []
+
+    for pr, n, w in zip(dataframe.loc[:, 'vB [m/h] Mean'], dataframe.loc[:, 'DZ [U/min] Mean'], dataframe.loc[:, 'Gravitational Force [kN] Mean']):
+        di = (3.35 * n * w) / (15.2 * pr)
+
+        drillibility.append(di)
+
+    dataframe.loc[:, 'Drillibility Index [kN/mm]'] = drillibility
+
+    return dataframe
+    
+
 def Start():
     st.session_state.start = True
 
@@ -512,7 +528,10 @@ def main():
                     st.markdown(f"""
                     <div class='stHeader'><i>{file_name_without_extension}</i> Intervals Data</div>
                     """, unsafe_allow_html=True)
-    
+
+                    if 'DZ [U/min] Mean' in columns and 'Andruck [bar] Mean' in columns and 'vB [m/h] Mean' in columns:
+                        st.session_state.stats_data_rocks = DI(st.session_state.stats_data_rocks)
+
                     st.table(data=st.session_state.stats_data_rocks)
                     st.caption(f'**Calculated Number of Intervals:** {counted_interval}')
                     st.caption(f'**Number of Intervals in Dataset:** {intervals}')
