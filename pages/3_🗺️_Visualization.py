@@ -74,23 +74,25 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
         if add_linear_curve:
             x_data = np.array(data_feature[selected_columns_x]).astype(float)
             y_data = np.array(data_feature[selected_columns_y]).astype(float)
-            y_data = y_data[::-1]
-
-            st.write(x_data.shape, y_data.shape)
+    
             slope, intercept, r_value, p_value, std_err = stats.linregress(x_data, y_data)
             line = slope * x_data + intercept
+            equation = f'y = {slope:.2f}x + {intercept:.2f}'
+            r_squared = f'R-Squared: {r_value**2:.2f}'
+    
             fig.add_trace(go.Scatter(
                 x=x_data,
                 y=line,
                 mode='lines',
                 line=dict(color='green', width=2),
+                hovertemplate=f'{equation}<br>{r_squared}',
                 showlegend=True,
                 name='Linear Curve Fit'
             ))
-
+            
     fig.update_xaxes(showspikes=True)
     fig.update_yaxes(showspikes=True)
-    fig.update_yaxes(range=[data_feature[selected_columns_y].min()+10, data_feature[selected_columns_y].max()+10])
+    fig.update_yaxes(range=[data_feature[selected_columns_y].min(), data_feature[selected_columns_y].max()+10])
     fig.update_traces(marker=dict(size=8))
     fig.update_layout(height=600, hovermode='closest')
 
