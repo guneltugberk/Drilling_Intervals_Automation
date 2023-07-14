@@ -291,6 +291,8 @@ def Excel(df, sheet):
 
 
 def DI(dataframe):
+    import math
+    
     dataframe.loc[:, 'Andruck [kPa]'] = dataframe.loc[:, 'Andruck [bar]'] * 100
     dataframe.loc[:, 'Gravitational Force [kN]'] = dataframe.loc[:, 'Andruck [kPa]'] * math.pi * (0.152**2) / 4
 
