@@ -45,6 +45,8 @@ def correlation_matrix_plot(data_plot):
 def feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option, water_depth, data_feature, add_linear_curve):
     import plotly.express as px
     import plotly.graph_objects as go
+    from scipy import stats
+    import numpy as np
 
     color_palette = px.colors.sequential.Viridis_r
 
