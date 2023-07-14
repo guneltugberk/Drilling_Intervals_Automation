@@ -74,6 +74,7 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
         if add_linear_curve:
             x_data = np.array(data_feature[selected_columns_x]).astype(float)
             y_data = np.array(data_feature[selected_columns_y]).astype(float)
+            y_data = y_data[::-1]
 
             st.write(x_data.shape, y_data.shape)
             slope, intercept, r_value, p_value, std_err = stats.linregress(x_data, y_data)
@@ -83,12 +84,13 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
                 y=line,
                 mode='lines',
                 line=dict(color='green', width=2),
-                showlegend=False,
+                showlegend=True,
                 name='Linear Curve Fit'
             ))
 
     fig.update_xaxes(showspikes=True)
     fig.update_yaxes(showspikes=True)
+    fig.update_yaxes(range=[data_feature[selected_columns_y].min()+10, data_feature[selected_columns_y].max()+10])
     fig.update_traces(marker=dict(size=8))
     fig.update_layout(height=600, hovermode='closest')
 
