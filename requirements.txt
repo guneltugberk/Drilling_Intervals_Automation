@@ -8,3 +8,4 @@ matplotlib
 seaborn
 pyxlsb
 xlsxwriter 
+statsmodels
