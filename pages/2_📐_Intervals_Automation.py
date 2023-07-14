@@ -349,7 +349,7 @@ def plot_intervals(interval_depths, interval_times, available_data):
 
     for depth, time in zip(interval_depths, interval_times):
         fig.add_trace(go.Scatter(x=time, y=depth, mode='markers', marker=dict(color='blue'),
-                                 showlegend=False, name='Interval Measurements'))
+                                 showlegend=False, name='Interval Measurements'), template='presentation')
 
         last_time = time[-1]
         fig.add_shape(
