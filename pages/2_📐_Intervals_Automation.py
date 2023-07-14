@@ -88,7 +88,7 @@ class Intervals:
         if 'p Luft [bar]' in cols and 'Q Luft [Nm3/min]' in cols:
             cols.append('Hydraulic Power [kW]')
 
-        if 'DZ [U/min] Mean' in cols and 'Andruck [bar] Mean' in cols and 'vB [m/h] Mean' in cols:
+        if 'DZ [U/min]' in cols and 'Andruck [bar]' in cols and 'vB [m/h]' in cols:
             cols.append('Drillibility Index [kN/mm]')
 
         depth = np.array(data['Teufe [m]'].values)
@@ -495,7 +495,7 @@ def main():
                 if 'p Luft [bar]' in columns and 'Q Luft [Nm3/min]' in columns:
                     a = Intervals.Energy(available_data)
                 
-                    if 'DZ [U/min] Mean' in columns and 'Andruck [bar] Mean' in columns and 'vB [m/h] Mean' in columns:
+                    if 'DZ [U/min]' in columns and 'Andruck [bar]' in columns and 'vB [m/h]' in columns:
                         prior_data = DI(a)
                         
                     else:
