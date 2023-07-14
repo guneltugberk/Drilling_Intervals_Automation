@@ -42,7 +42,7 @@ def correlation_matrix_plot(data_plot):
 
 
 @st.cache_resource(ttl=3600)
-def feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option, water_depth, data_feature):
+def feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option, water_depth, data_feature, add_linear_curve):
     import plotly.express as px
     import plotly.graph_objects as go
 
@@ -68,6 +68,20 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
         fig.add_hline(y=water_depth, line=dict(color='blue', width=1, dash='dash'))
 
         fig.update_layout(showlegend=True)
+
+        if add_linear_curve:
+            x_data = data_feature[selected_columns_x]
+            y_data = data_feature[selected_columns_y]
+            slope, intercept, r_value, p_value, std_err = stats.linregress(x_data, y_data)
+            line = slope * x_data + intercept
+            fig.add_trace(go.Scatter(
+                x=x_data,
+                y=line,
+                mode='lines',
+                line=dict(color='green', width=2),
+                showlegend=False,
+                name='Linear Curve Fit'
+            ))
 
     fig.update_xaxes(showspikes=True)
     fig.update_yaxes(showspikes=True)
@@ -189,6 +203,12 @@ def main():
                 selected_columns_x = st.selectbox("**Select x-axis**", st.session_state.prior_data_rocks.columns)
                 selected_columns_y = st.selectbox("**Select y-axis**", st.session_state.prior_data_rocks.columns)
 
+                if selected_columns_y == 'Teufe [m] Mean':
+                    is_linear = st.checkbox('**Would you like to add a linear fit?**')
+
+                else:
+                    is_linear = False
+
                 formation_option = st.radio("**Formation Option**", ['Include Formations', 'Exclude Formations'])
 
                 if 'formation_water' not in st.session_state:
@@ -204,7 +224,7 @@ def main():
                     else:
                         if st.session_state.formation_water:
                             feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
-                                                       st.session_state.formation_water, st.session_state.prior_data_rocks)
+                                                       st.session_state.formation_water, st.session_state.prior_data_rocks, is_linear)
 
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Stats Data':
@@ -217,6 +237,12 @@ def main():
                 selected_columns_x = st.selectbox("**Select x-axis**", st.session_state.stats_data_rocks.columns)
                 selected_columns_y = st.selectbox("**Select y-axis**", st.session_state.stats_data_rocks.columns)
 
+                if selected_columns_y == 'Teufe [m] Mean':
+                    is_linear = st.checkbox('**Would you like to add a linear fit?**')
+
+                else:
+                    is_linear = False
+
                 formation_option = st.radio("**Formation Option**", ['Include Formations', 'Exclude Formations'])
 
                 if 'formation_water' not in st.session_state:
@@ -232,7 +258,7 @@ def main():
                     else:
                         if st.session_state.formation_water:
                             feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
-                                                       st.session_state.formation_water, st.session_state.stats_data_rocks)
+                                                       st.session_state.formation_water, st.session_state.prior_data_rocks, is_linear)
 
 
 if __name__ == '__main__':
