@@ -15,7 +15,7 @@ class Upload:
             try:
                 self.df = pd.read_excel(self.data_source, sheet_name=self.sheet_name)
             except:
-                st.warning('Please enter a correct sheet name!.', icon="✅")
+                st.warning('**Please enter a correct sheet name!**', icon="✅")
                 
         elif self.data_source.name.endswith(".csv"):
             # Read CSV file
@@ -200,7 +200,7 @@ def main():
                         refresh = True
 
                     else:
-                        st.error(st.error('Something went wrong, try again!', icon="🚨"))
+                        st.error('**Something went wrong, try again!**', icon="🚨")
 
                 else:
                     refresh = False
@@ -230,10 +230,10 @@ def main():
                         st.table(data=missing_values)
                         
                     except:
-                        st.warning('Please supply all necessary informations', icon="✅")
+                        st.warning('**Please supply all necessary informations.**', icon="✅")
                     
                 if not refresh:
-                    st.warning('Please refresh the page and re-upload the dataset.', icon='💹')
+                    st.warning('**Please refresh the page and re-upload the dataset.**', icon='💹')
 
         if 'processed_data' in st.session_state:
             if missing_values.sum() > 0:
