@@ -209,28 +209,28 @@ def main():
                     try:
                         data_frame = Upload(data_source=uploaded_data, sheet_name=sheet).read_file()
                         processed_data = processing(data_frame)[0]
+
+                        if 'processed_data' not in st.session_state:
+                        st.session_state.processed_data = processed_data
+
+                        st.table(data=st.session_state.processed_data.describe())
+    
+                        num_features = processing(data_frame)[2]
+                        num_obs = processing(data_frame)[1]
+    
+                        st.caption(f'**Number of Features:** *{num_features}*')
+                        st.caption(f'**Number of Observations:** *{num_obs}*')
+                        st.divider()
+    
+                        st.markdown("""
+                        <div class='stHeader'>Number of Missing Values</div>
+                        """, unsafe_allow_html=True)
+                        missing_values = st.session_state.processed_data.isna().sum()
+    
+                        st.table(data=missing_values)
                         
                     except:
                         st.warning('Please supply all necessary informations', icon="✅")
-
-                    if 'processed_data' not in st.session_state:
-                        st.session_state.processed_data = processed_data
-
-                    st.table(data=st.session_state.processed_data.describe())
-
-                    num_features = processing(data_frame)[2]
-                    num_obs = processing(data_frame)[1]
-
-                    st.caption(f'**Number of Features:** *{num_features}*')
-                    st.caption(f'**Number of Observations:** *{num_obs}*')
-                    st.divider()
-
-                    st.markdown("""
-                    <div class='stHeader'>Number of Missing Values</div>
-                    """, unsafe_allow_html=True)
-                    missing_values = st.session_state.processed_data.isna().sum()
-
-                    st.table(data=missing_values)
                     
                 if not refresh:
                     st.warning('Please refresh the page and re-upload the dataset.', icon='💹')
