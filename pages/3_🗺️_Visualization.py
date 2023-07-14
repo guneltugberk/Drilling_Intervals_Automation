@@ -65,7 +65,7 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
                                  line=dict(color='blue', width=2, dash='dash'),
                                  text=['Formation Water'],
                                  textposition='top center',
-                                 name='Formation Water'))
+                                 name='Formation Water Depth'))
 
         fig.add_hline(y=water_depth, line=dict(color='blue', width=1, dash='dash'))
 
