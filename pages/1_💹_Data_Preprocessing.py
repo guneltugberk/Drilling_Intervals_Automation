@@ -211,7 +211,7 @@ def main():
                         processed_data = processing(data_frame)[0]
 
                         if 'processed_data' not in st.session_state:
-                        st.session_state.processed_data = processed_data
+                            st.session_state.processed_data = processed_data
 
                         st.table(data=st.session_state.processed_data.describe())
     
