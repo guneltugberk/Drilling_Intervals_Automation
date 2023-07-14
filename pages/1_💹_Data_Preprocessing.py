@@ -15,7 +15,7 @@ class Upload:
             try:
                 self.df = pd.read_excel(self.data_source, sheet_name=self.sheet_name)
             except:
-                st.warning('Please enter a correct sheet name!.')
+                st.warning('Please enter a correct sheet name!.', icon="✅")
                 
         elif self.data_source.name.endswith(".csv"):
             # Read CSV file
@@ -206,8 +206,12 @@ def main():
                     refresh = False
 
                 if refresh:
-                    data_frame = Upload(data_source=uploaded_data, sheet_name=sheet).read_file()
-                    processed_data = processing(data_frame)[0]
+                    try:
+                        data_frame = Upload(data_source=uploaded_data, sheet_name=sheet).read_file()
+                        processed_data = processing(data_frame)[0]
+                        
+                    except:
+                        st.warning('Please supply all necessary informations', icon="✅")
 
                     if 'processed_data' not in st.session_state:
                         st.session_state.processed_data = processed_data
