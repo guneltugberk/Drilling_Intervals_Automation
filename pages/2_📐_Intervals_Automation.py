@@ -88,6 +88,9 @@ class Intervals:
         if 'p Luft [bar]' in cols and 'Q Luft [Nm3/min]' in cols:
             cols.append('Hydraulic Power [kW]')
 
+        if 'DZ [U/min] Mean' in cols and 'Andruck [bar] Mean' in cols and 'vB [m/h] Mean' in cols:
+            cols.append('Drillibility Index [kN/mm]')
+
         depth = np.array(data['Teufe [m]'].values)
         deltaTime = np.array(data['Delta Zeit [s]'].values)
 
@@ -490,8 +493,17 @@ def main():
                 available_data = Intervals.outliers(st.session_state.dropped_data, columns, threshold)
 
                 if 'p Luft [bar]' in columns and 'Q Luft [Nm3/min]' in columns:
-                    prior_data = Intervals.Energy(available_data)
-
+                    a = Intervals.Energy(available_data)
+                
+                    if 'DZ [U/min] Mean' in columns and 'Andruck [bar] Mean' in columns and 'vB [m/h] Mean' in columns:
+                        prior_data = DI(a)
+                        
+                    else:
+                        prior_data = available_data
+                        
+                elif 'DZ [U/min] Mean' in columns and 'Andruck [bar] Mean' in columns and 'vB [m/h] Mean' in columns:
+                    prior_data = DI(available_data)
+                    
                 else:
                     prior_data = available_data
 
