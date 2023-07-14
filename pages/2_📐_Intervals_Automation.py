@@ -299,8 +299,12 @@ def DI(dataframe):
     drillibility = []
 
     for pr, n, w in zip(dataframe.loc[:, 'vB [m/h]'], dataframe.loc[:, 'DZ [U/min]'], dataframe.loc[:, 'Gravitational Force [kN]']):
-        di = (3.35 * n * w) / (15.2 * pr)
-
+        if pr == 0:
+            di = 0
+            
+        else:
+            di = (3.35 * n * w) / (15.2 * pr)
+            
         drillibility.append(di)
 
     dataframe.loc[:, 'Drillibility Index [kN/mm]'] = drillibility
