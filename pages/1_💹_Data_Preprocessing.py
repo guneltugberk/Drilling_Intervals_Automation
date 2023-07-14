@@ -8,10 +8,15 @@ class Upload:
 
     def read_file(self):
         import pandas as pd
+        import streamlit as st
 
         if self.data_source.name.endswith(".xlsx"):
             # Read Excel file
-            self.df = pd.read_excel(self.data_source, sheet_name=self.sheet_name)
+            try:
+                self.df = pd.read_excel(self.data_source, sheet_name=self.sheet_name)
+            except:
+                st.warning('Please enter a correct sheet name!.')
+                
         elif self.data_source.name.endswith(".csv"):
             # Read CSV file
             self.df = pd.read_csv(self.data_source)
