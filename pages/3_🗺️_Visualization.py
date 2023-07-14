@@ -74,6 +74,8 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
         if add_linear_curve:
             x_data = np.array(data_feature[selected_columns_x])
             y_data = np.array(data_feature[selected_columns_y])
+
+            st.write(x_data.shape, y_data.shape)
             slope, intercept, r_value, p_value, std_err = stats.linregress(x_data, y_data)
             line = slope * x_data + intercept
             fig.add_trace(go.Scatter(
