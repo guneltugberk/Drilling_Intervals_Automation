@@ -17,6 +17,8 @@ def add_logo():
                 font-size: 25px;
                 position: relative;
                 top: 100px;
+                text-align: center;
+                font-weight: bold;
             }
         </style>
         """,
