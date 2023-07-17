@@ -47,18 +47,16 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
     import plotly.graph_objects as go
     import numpy as np
 
-    color_palette = px.colors.sequential.Viridis_r
-
     if formation_option == 'Include Formations' and add_linear_curve:
 
         fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
                          hover_name='Formation',
-                         title='Feature Investigation with Formations', color_discrete_sequence=color_palette, trendline='ols')
+                         title='Feature Investigation with Formations', color_discrete_sequence=px.colors.qualitative.G10, trendline='ols')
         
     elif formation_option == 'Include Formations':
         fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
                          hover_name='Formation',
-                         title='Feature Investigation with Formations', color_discrete_sequence=color_palette)
+                         title='Feature Investigation with Formations', color_discrete_sequence=px.colors.qualitative.G10)
         
     elif add_linear_curve:
         fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
