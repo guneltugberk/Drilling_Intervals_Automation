@@ -14,7 +14,7 @@ def add_logo():
                 content: "Institut für Bohrtechnik und Fluidbergbau";
                 margin-left: 20px;
                 margin-top: 20px;
-                font-size: 20px;
+                font-size: 15px;
                 position: relative;
                 top: 100px;
                 text-align: center;
