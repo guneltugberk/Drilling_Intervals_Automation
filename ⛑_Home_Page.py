@@ -8,7 +8,7 @@ def add_logo():
                 background-image: url(https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/TUBAF_Logo.svg/300px-TUBAF_Logo.svg.png);
                 background-repeat: no-repeat;
                 padding-top: 80px;
-                background-position: 30px 30px;
+                background-position: 30px 50px;
             }
             [data-testid="stSidebarNav"]::before {
                 content: "TU Bergakademie";
