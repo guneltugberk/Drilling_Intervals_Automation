@@ -7,7 +7,7 @@ def add_logo():
             [data-testid="stSidebarNav"] {
                 background-image: url(https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/TUBAF_Logo.svg/300px-TUBAF_Logo.svg.png);
                 background-repeat: no-repeat;
-                padding-top: 80px;
+                padding-top: 95px;
                 background-position: 25px 50px;
             }
             [data-testid="stSidebarNav"]::before {
