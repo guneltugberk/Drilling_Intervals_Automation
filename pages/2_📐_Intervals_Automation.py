@@ -100,7 +100,7 @@ class Intervals:
         time_interval = []
 
         for i in range(interval_count):
-            end_value = depth[start_index] + interval_size + (interval_size * (error / 100))
+            end_value = depth[start_index] + interval_size
             end_index = depth.searchsorted(end_value, side='right')
 
             if end_index >= len(depth):
