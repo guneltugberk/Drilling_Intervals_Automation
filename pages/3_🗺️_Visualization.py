@@ -94,6 +94,32 @@ def Select():
     st.session_state.select = True
 
 
+def add_logo():
+    st.markdown(
+        """
+        <style>
+            [data-testid="stSidebarNav"] {
+                background-image: url(https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/TUBAF_Logo.svg/300px-TUBAF_Logo.svg.png);
+                background-repeat: no-repeat;
+                padding-top: 95px;
+                background-position: 25px 50px;
+            }
+            [data-testid="stSidebarNav"]::before {
+                content: "Institut für Bohrtechnik und Fluidbergbau";
+                margin-left: 20px;
+                margin-top: 20px;
+                font-size: 15px;
+                position: relative;
+                top: 100px;
+                text-align: center;
+                font-weight: bold;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )   
+
+
 def main():
     st.set_page_config(
     page_title="Visualization",
@@ -128,6 +154,8 @@ def main():
     """
     , unsafe_allow_html=True
     )
+
+    add_logo()
 
     st.markdown("""
     <div class='stTitle'>Visualization</div>
