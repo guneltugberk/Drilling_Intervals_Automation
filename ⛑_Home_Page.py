@@ -11,10 +11,10 @@ def add_logo():
                 background-position: 25px 50px;
             }
             [data-testid="stSidebarNav"]::before {
-                content: "TU Bergakademie";
+                content: "Institut für Bohrtechnik und Fluidbergbau";
                 margin-left: 20px;
                 margin-top: 20px;
-                font-size: 25px;
+                font-size: 20px;
                 position: relative;
                 top: 100px;
                 text-align: center;
