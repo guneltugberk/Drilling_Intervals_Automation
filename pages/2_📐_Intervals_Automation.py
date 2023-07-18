@@ -17,8 +17,9 @@ class Intervals:
         removed_data = data.drop(data.index[unsatisfied_indexes_teufe])
 
         p_luft = np.array(removed_data.loc[:, 'p Luft [bar]'])
+        DZ = np.array(removed_data.loc[:, 'DZ [U/min]'])
         
-        unsatisfied_indexes_pluft = np.where(p_luft < 2)[0]
+        unsatisfied_indexes_pluft = np.where((p_luft < 2) | (DZ == 0))[0]
         removed_data = removed_data.drop(removed_data.index[unsatisfied_indexes_pluft])
 
         if isinstance(removed_data, pd.DataFrame):
@@ -353,7 +354,7 @@ def Display():
 
 
 def Control(data, cols, length, error, int_depth, rocks, number_of_intervals):
-    required_columns = ["Zeit [s]", "Delta Zeit [s]", "Teufe [m]", "Delta Teufe [m]"]
+    required_columns = ["Zeit [s]", "Delta Zeit [s]", "Teufe [m]", "Delta Teufe [m]", "p Luft [bar]", "DZ [U/min]"]
     flag_control = -3
 
     if cols and length and error and int_depth and rocks and number_of_intervals:
@@ -508,7 +509,7 @@ def main():
         columns = st.multiselect(
             label='**Columns to be used**',
             options=st.session_state.dropped_data.columns,
-            default=['Zeit [s]', 'Delta Zeit [s]', 'Teufe [m]', 'Delta Teufe [m]']
+            default=['Zeit [s]', 'Delta Zeit [s]', 'Teufe [m]', 'Delta Teufe [m]', 'p Luft [bar]', 'DZ [U/min]']
         )
 
         formation_water = st.number_input('**Encountered Formation Water Depth, in m**', min_value=0)
@@ -611,7 +612,7 @@ def main():
                     st.error('According to the algorithm, the dataset is found to be not convenient.', icon='🛑')
 
             elif st.session_state.flag == 0:
-                st.warning('Please do not forget to select the following columns: *Zeit*, *Teufe*, *Delta Zeit*', icon='💹')
+                st.warning('Please do not forget to select the following columns: *Zeit*, *Teufe*, *Delta Zeit*, *p Luft*, *DZ*', icon='💹')
 
             elif st.session_state.flag == -1:
                 st.warning('Number of formation intervals cannot be less than 1!', icon='💹')
