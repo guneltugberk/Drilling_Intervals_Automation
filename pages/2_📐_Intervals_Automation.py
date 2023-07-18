@@ -13,8 +13,13 @@ class Intervals:
         delta_teufe = np.array(data.loc[:, 'Delta Teufe [m]'])
         teufe = np.array(data.loc[:, 'Teufe [m]'])
 
-        unsatisfied_indexes = np.where((teufe < 0) | (delta_teufe <= 0.001))[0]
-        removed_data = data.drop(data.index[unsatisfied_indexes])
+        unsatisfied_indexes_teufe = np.where((teufe < 0) | (delta_teufe <= 0.001))[0]
+        removed_data = data.drop(data.index[unsatisfied_indexes_teufe])
+
+        p_luft = np.array(removed_data.loc[:, 'p Luft [bar]'])
+        
+        unsatisfied_indexes_pluft = np.where(p_luft < 2)[0]
+        removed_data = removed_data.drop(removed_data.index[unsatisfied_indexes_pluft])
 
         if isinstance(removed_data, pd.DataFrame):
             # Create a list of the filtered values for each column
