@@ -361,19 +361,29 @@ def Display():
     st.session_state.display = True
 
 
-def Control(data, cols, length, error, int_depth, rocks, number_of_intervals):
+def Control(data, cols, length, error, int_depth=None, rocks=None, number_of_intervals=None):
     required_columns = ["Zeit [s]", "Delta Zeit [s]", "Teufe [m]", "Delta Teufe [m]", "p Luft [bar]", "DZ [U/min]"]
     flag_control = -3
 
-    if cols and length and error and int_depth and rocks and number_of_intervals:
+
+    
+    if int_depth is None and number_of_intervals is None and rocks is None:
+        if all(col in cols for col in required_columns) and all(col in data.columns for col in required_columns):
+            flag_control = 1
+
+        
+    if cols and length and error and int_depth and number_of_intervals and rocks:
         if all(col in cols for col in required_columns) and all(col in data.columns for col in required_columns):
             if all(value[0] < value[1] for value in int_depth) and all(rocks):
                 if number_of_intervals >= 1:
                     flag_control = 1
+
                 else:
                     flag_control = -1  # Number of intervals are missing
+
             else:
                 flag_control = -2  # Formation and depth missing
+                
         else:
             flag_control = 0  # Required columns are missing
 
@@ -492,32 +502,53 @@ def main():
         error_rate = st.number_input('**Error Rate, in %**', min_value=0, max_value=100)
         threshold = st.number_input('**Threshold, an integer**', min_value=1, max_value=15)
 
-        st.markdown(f"""
-        <div class='stHeader'>Encountered Formations for <i>{file_name_without_extension}</i></div>
-        """, unsafe_allow_html=True)
-        
-        num_intervals = st.number_input('**Number of Formation Interval**', min_value=1, value=3, step=1)
+        check_formation = st.checkbox('**Do you have formation informations?**')
+
+        if 'check_formation' not in st.session_state:
+            st.session_state.check_formation = check_formation
+
         depth_intervals = []
         formations = []
+        
+        if check_formation:
+            st.markdown(f"""
+            <div class='stHeader'>Encountered Formations for <i>{file_name_without_extension}</i></div>
+            """, 
+            unsafe_allow_html=True)
+        
+            num_intervals = st.number_input('**Number of Formation Interval**', min_value=1, value=3, step=1)
 
-        for i in range(num_intervals):
-            interval_start = st.number_input(f'**Interval {i + 1} Start, in m**', value=0.0, step=0.1)
-            interval_end = st.number_input(f'**Interval {i + 1} End, in m**', value=0.0, step=0.1)
-            formation = st.text_input(f'**Formation for Interval {i + 1}**', value='', placeholder='Gneiss')
+            for i in range(num_intervals):
+                interval_start = st.number_input(f'**Interval {i + 1} Start, in m**', value=0.0, step=0.1)
+                interval_end = st.number_input(f'**Interval {i + 1} End, in m**', value=0.0, step=0.1)
+                formation = st.text_input(f'**Formation for Interval {i + 1}**', value='', placeholder='Gneiss')
 
-            depth_intervals.append((interval_start, interval_end))
-            formations.append(formation)
+                depth_intervals.append((interval_start, interval_end))
+                formations.append(formation)
 
+        else:
+            num_intervals = None
+            depth_intervals = None
+            formations = None
+
+        
+        check_water = st.checkbox('**Do you have formartion water information?**')
+
+        if 'check_water' not in st.session_state:
+            st.session_state.check_water = check_water
+
+        if check_water:
+            formation_water = st.number_input('**Encountered Formation Water Depth, in m**', min_value=0)
+
+            if 'formation_water' not in st.session_state or st.session_state.formation_water != formation_water:
+                st.session_state.formation_water = formation_water
+        
         columns = st.multiselect(
             label='**Columns to be used**',
             options=st.session_state.dropped_data.columns,
             default=['Zeit [s]', 'Delta Zeit [s]', 'Teufe [m]', 'Delta Teufe [m]', 'p Luft [bar]', 'DZ [U/min]']
         )
 
-        formation_water = st.number_input('**Encountered Formation Water Depth, in m**', min_value=0)
-
-        if 'formation_water' not in st.session_state or st.session_state.formation_water != formation_water:
-            st.session_state.formation_water = formation_water
 
         st.button('Start', on_click=Start, type='primary')
         display_chart = False
@@ -569,9 +600,14 @@ def main():
                 st.table(data=st.session_state.prior_data.describe())
                 st.divider()
 
+                if check_formation:
                 
-                prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
-                stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
+                    prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
+                    stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
+
+                if not check_formation:
+                    prior_data_rocks = st.session_state.prior_data
+                    stats_data_rocks = st.session_state.stats_data
 
                 if not prior_data_rocks.empty and not stats_data_rocks.empty:
                     if 'prior_data_rocks' not in st.session_state:

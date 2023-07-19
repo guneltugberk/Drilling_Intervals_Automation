@@ -47,43 +47,63 @@ def correlation_matrix_plot(data_plot):
 
 
 @st.cache_resource(ttl=3600)
-def feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option, water_depth, data_feature, add_linear_curve):
+def feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option, water_depth, data_feature, add_linear_curve, control_formation, control_water):
     import plotly.express as px
     import plotly.graph_objects as go
-    import numpy as np
+    import statsmodels.api as sm
 
-    if formation_option == 'Include Formations' and add_linear_curve:
 
-        fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
-                         hover_name='Formation',
-                         title='Feature Investigation with Formations', color_discrete_sequence=px.colors.qualitative.G10, trendline='ols')
-        
-    elif formation_option == 'Include Formations':
-        fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
-                         hover_name='Formation',
-                         title='Feature Investigation with Formations', color_discrete_sequence=px.colors.qualitative.G10)
-        
-    elif add_linear_curve:
-        fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
-                         title='Feature Investigation without Formations', trendline='ols')
-        
-    else:
-        fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
-                         title='Feature Investigation without Formations')
+    if control_formation:
+        if formation_option == 'Include Formations' and add_linear_curve:
 
-    if selected_columns_y == 'Teufe [m] Mean' or selected_columns_y == 'Teufe [m]':
-        fig.update_yaxes(autorange="reversed")
-        fig.add_trace(go.Scatter(x=[None, None], y=[None, None], mode='lines+text',
-                                 line=dict(color='blue', width=2, dash='dash'),
-                                 text=['Formation Water'],
-                                 textposition='top center',
-                                 name='Formation Water Depth'))
-
-        fig.add_hline(y=water_depth, line=dict(color='blue', width=1, dash='dash'))
-
-        fig.update_layout(showlegend=True)
-
+            fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
+                            hover_name='Formation',
+                            title='Feature Investigation with Formations', color_discrete_sequence=px.colors.qualitative.G10, trendline='ols', trendline_color_override='red', trendline_scope='overall')
             
+        elif formation_option == 'Include Formations':
+            fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
+                            hover_name='Formation',
+                            title='Feature Investigation with Formations', color_discrete_sequence=px.colors.qualitative.G10)
+            
+        elif add_linear_curve:
+            fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
+                            title='Feature Investigation without Formations', trendline='ols', trendline_color_override='red', trendline_scope='overall')
+            
+    elif not control_formation:    
+        if add_linear_curve:
+            fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
+                            title='Feature Investigation without Formations', trendline='ols', trendline_color_override='red', trendline_scope='overall')
+            
+        else:
+            fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
+                            title='Feature Investigation without Formations')
+    
+    
+    if control_water:
+        if selected_columns_y == 'Teufe [m] Mean' or selected_columns_y == 'Teufe [m]':
+            fig.update_yaxes(autorange="reversed")
+            fig.add_trace(go.Scatter(x=[None, None], y=[None, None], mode='lines+text',
+                                    line=dict(color='blue', width=2, dash='dash'),
+                                    text=['Formation Water'],
+                                    textposition='top center',
+                                    name='Formation Water Depth', 
+                                    opacity=0.5))
+
+            fig.add_hline(y=water_depth, line=dict(color='blue', width=1, dash='dash'))
+
+    else:
+        if selected_columns_y == 'Teufe [m] Mean' or selected_columns_y == 'Teufe [m]':
+            fig.update_yaxes(autorange="reversed")
+            fig.add_trace(go.Scatter(x=[None, None], y=[None, None], mode='lines+text',
+                                    line=dict(color='blue', width=2, dash='dash'),
+                                    text=['Formation Water'],
+                                    textposition='top center',
+                                    name='Formation Water Depth',
+                                    opacity=0.5))
+
+            fig.add_hline(y=water_depth, line=dict(color='blue', width=1, dash='dash'))
+
+    fig.update_layout(showlegend=True)            
     fig.update_xaxes(showspikes=True)
     fig.update_yaxes(showspikes=True)
     fig.update_yaxes(range=[data_feature[selected_columns_y].min(), data_feature[selected_columns_y].max()+10])
@@ -166,15 +186,21 @@ def main():
 
     if 'prior_data_rocks' not in st.session_state:
         st.session_state.prior_data_rocks = None
+    
+    if 'check_formation' not in st.session_state:
+        st.session_state.check_formation = None
+    
+    if 'check_water' not in st.session_state:
+        st.session_state.check_water = None
 
-    if st.session_state.prior_data_rocks is None and st.session_state.stats_data_rocks is None:
+    if st.session_state.prior_data_rocks is None and st.session_state.stats_data_rocks is None and st.session_state.check_water is None and st.session_state.check_formation is None:
         st.warning('**To be able to proceed the calculations, please complete the step one and two**',
                    icon='❌')
     elif st.session_state.prior_data_rocks is not None and st.session_state.stats_data_rocks is None:
         st.warning('**To be able to proceed the calculations, please complete the step two:** *Intervals Automation*',
                    icon='📐')
 
-    elif st.session_state.prior_data_rocks is not None and st.session_state.stats_data_rocks is not None:
+    elif st.session_state.prior_data_rocks is not None and st.session_state.stats_data_rocks is not None and st.session_state.check_water is not None and st.session_state.check_formation is not None:
         # Add a slider to select the visualization type
         visualization_type = st.sidebar.selectbox("**Select Visualization Type**",
                                                   ['Correlation Matrix Plot', 'Feature Investigation'])
@@ -193,31 +219,45 @@ def main():
                 st.markdown(f"""
                 <div class='stHeader'>The Correlation Matrix Plot with Prior Data of <i>{st.session_state.file_name}</i></div>
                 """, unsafe_allow_html=True)
-                correct_data = correlation_correction(st.session_state.prior_data_rocks)[0]
-                numeric_data = correlation_correction(st.session_state.prior_data_rocks)[1]
 
-                figure = correlation_matrix_plot(correct_data)
-                st.plotly_chart(figure)
+                if st.session_state.check_formation:
+                    correct_data = correlation_correction(st.session_state.prior_data_rocks)[0]
+                    numeric_data = correlation_correction(st.session_state.prior_data_rocks)[1]
 
-                st.markdown("""
-                <div class='stHeader'>Numerical Representation of Formations</div>
-                """, unsafe_allow_html=True)
-                st.table(data=numeric_data)
+                    figure = correlation_matrix_plot(correct_data)
+                    st.plotly_chart(figure)
+
+                    st.markdown("""
+                    <div class='stHeader'>Numerical Representation of Formations</div>
+                    """, unsafe_allow_html=True)
+
+                    st.table(data=numeric_data)
+
+                elif not st.session_state.check_formation:
+                    figure = correlation_matrix_plot(st.session_state.prior_data_rocks)
+                    st.plotly_chart(figure)
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
                 st.markdown(f"""
                 <div class='stHeader'>The Correlation Matrix Plot with Stats Data of <i>{st.session_state.file_name}</i></div>
                 """, unsafe_allow_html=True)
-                correct_data = correlation_correction(st.session_state.stats_data_rocks)[0]
-                numeric_data = correlation_correction(st.session_state.stats_data_rocks)[1]
+                
+                if st.session_state.check_formation:
+                    correct_data = correlation_correction(st.session_state.stats_data_rocks)[0]
+                    numeric_data = correlation_correction(st.session_state.stats_data_rocks)[1]
 
-                figure = correlation_matrix_plot(correct_data)
-                st.plotly_chart(figure)
+                    figure = correlation_matrix_plot(correct_data)
+                    st.plotly_chart(figure)
 
-                st.markdown("""
-                <div class='stHeader'>Numerical Representation of Formations</div>
-                """, unsafe_allow_html=True)
-                st.table(data=numeric_data)
+                    st.markdown("""
+                    <div class='stHeader'>Numerical Representation of Formations</div>
+                    """, unsafe_allow_html=True)
+
+                    st.table(data=numeric_data)
+                
+                elif not st.session_state.check_formation:
+                    figure = correlation_matrix_plot(st.session_state.stats_data_rocks)
+                    st.plotly_chart(figure)
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
 
@@ -235,22 +275,36 @@ def main():
                 else:
                     is_linear = False
 
-                formation_option = st.radio("**Formation Option**", ['Include Formations', 'Exclude Formations'])
+                if st.session_state.check_formation:
+                    formation_option = st.radio("**Formation Option**", ['Include Formations', 'Exclude Formations'])
 
-                if 'formation_water' not in st.session_state:
-                    st.session_state.formation_water = None
+                else:
+                    formation_option = None
 
-                if st.session_state.formation_water is None:
-                    st.warning('**Please go back into previous page to specify Formation Water Depth**')
+                if st.session_state.check_water:
+                    if 'formation_water' not in st.session_state:
+                        st.session_state.formation_water = None
 
-                if st.button('Confirm Selection'):
-                    if 'Formation' in selected_columns_x or 'Formation' in selected_columns_y:
-                        st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='💹')
-                        
-                    else:
-                        if st.session_state.formation_water:
-                            feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
-                                                       st.session_state.formation_water, st.session_state.prior_data_rocks, is_linear)
+                    if st.session_state.formation_water is None:
+                        st.warning('**Please go back into previous page to specify Formation Water Depth**')
+
+                    display_plot = st.button('Confirm Selection')
+
+                    if display_plot:
+                        if 'Formation' in selected_columns_x or 'Formation' in selected_columns_y:
+                            st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='💹')
+                            
+                        else:
+                            if st.session_state.formation_water:
+                                feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                                                        st.session_state.formation_water, st.session_state.prior_data_rocks, is_linear, st.session_state.check_formation, st.session_state.check_water)
+                
+                elif not st.session_state.check_water:
+                    display_plot = st.button('Confirm Selection')
+
+                    if display_plot:
+                        feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                                                            st.session_state.formation_water, st.session_state.prior_data_rocks, is_linear, st.session_state.check_formation, st.session_state.check_water)
 
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Stats Data':
@@ -269,22 +323,36 @@ def main():
                 else:
                     is_linear = False
 
-                formation_option = st.radio("**Formation Option**", ['Include Formations', 'Exclude Formations'])
+                if st.session_state.check_formation:
+                    formation_option = st.radio("**Formation Option**", ['Include Formations', 'Exclude Formations'])
 
-                if 'formation_water' not in st.session_state:
-                    st.session_state.formation_water = None
+                else:
+                    formation_option = None
+                
+                if st.session_state.check_water:
+                    if 'formation_water' not in st.session_state:
+                        st.session_state.formation_water = None
 
-                if st.session_state.formation_water is None:
-                    st.warning('**Please go back into previous page to specify Formation Water Depth**')
+                    if st.session_state.formation_water is None:
+                        st.warning('**Please go back into previous page to specify Formation Water Depth**')
 
-                if st.button('Confirm Selection'):
-                    if 'Formation' in selected_columns_x or 'Formation' in selected_columns_y:
-                        st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='💹')
-                        
-                    else:
-                        if st.session_state.formation_water:
-                            feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
-                                                       st.session_state.formation_water, st.session_state.stats_data_rocks, is_linear)
+                    display_plot = st.button('Confirm Selection')
+
+                    if display_plot:
+                        if 'Formation' in selected_columns_x or 'Formation' in selected_columns_y:
+                            st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='💹')
+                            
+                        else:
+                            if st.session_state.formation_water:
+                                feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                                                        st.session_state.formation_water, st.session_state.stats_data_rocks, is_linear, st.session_state.check_formation, st.session_state.check_water)
+                
+                elif not st.session_state.check_water:
+                    display_plot = st.button('Confirm Selection')
+
+                    if display_plot:
+                        feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                                                            st.session_state.formation_water, st.session_state.stats_data_rocks, is_linear, st.session_state.check_formation, st.session_state.check_water)
 
 
 if __name__ == '__main__':
