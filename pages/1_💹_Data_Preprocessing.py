@@ -181,12 +181,18 @@ def main():
 
     if st.session_state.confirm_upload:
         if uploaded_data is not None:
-            if sheet.strip():
-                # Sheet name is provided
-                st.session_state.uploaded_data = uploaded_data
-                st.success('**Dataset has been uploaded!**', icon="✅")
-            else:
-                st.error('**Please enter a sheet name!**')
+                file_name = uploaded_data.name
+
+                if file_name.endswith(".csv"):
+                        st.success('**Dataset has been uploaded!**', icon="✅")
+
+                elif file_name.endswith(".xlsx"):
+                    if sheet.strip():
+                        st.session_state.uploaded_data = uploaded_data
+                        st.success('**Dataset has been uploaded!**', icon="✅")
+
+                else:
+                    st.error('**Please enter a sheet name!**')
         else:
             st.error('**Please upload a dataset!**')
 
