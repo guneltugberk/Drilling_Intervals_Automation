@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 class Upload:
     def __init__(self, data_source, sheet_name):
         self.df = None
@@ -171,8 +172,9 @@ def main():
     if 'confirm_upload' not in st.session_state:
         st.session_state.confirm_upload = False
 
-    new_flag = None
-
+    if 'process_flag' not in st.session_state:
+        st.session_state.process_flag = False
+    
     if st.session_state.confirm_upload:
         if uploaded_data is not None:
             if 'uploaded_data' not in st.session_state:
@@ -180,18 +182,14 @@ def main():
 
             if sheet.strip():
                 # Sheet name is provided
-                new_flag = 1
-
-                if 'new_flag' not in st.session_state:
-                    st.session_state.new_flag = new_flag
-
+                st.session_state.process_flag = True
                 st.success('Dataset has been uploaded!', icon="✅")
             else:
                 st.error('Please enter a sheet name')
         else:
             st.error('Please upload a dataset')
 
-    if st.session_state.new_flag == 1:
+    if st.session_state.process_flag:
         with st.form('Processing'):
             st.markdown("""
                 <div class='stHeader'> Processing Data</div>
