@@ -184,6 +184,7 @@ def main():
                 file_name = uploaded_data.name
 
                 if file_name.endswith(".csv"):
+                        st.session_state.uploaded_data = uploaded_data
                         st.success('**Dataset has been uploaded!**', icon="✅")
 
                 elif file_name.endswith(".xlsx"):
