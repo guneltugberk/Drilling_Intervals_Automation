@@ -92,6 +92,7 @@ def Select():
     st.session_state.select = True
 
 
+@st.cache_data(ttl=3600)
 def add_logo():
     st.markdown(
         """
@@ -118,6 +119,7 @@ def add_logo():
     )   
 
 
+@st.cache_resource(ttl=3600)
 def main():
     st.set_page_config(
     page_title="Visualization",
@@ -228,7 +230,7 @@ def main():
                 selected_columns_x = st.selectbox("**Select x-axis**", st.session_state.prior_data_rocks.columns)
                 selected_columns_y = st.selectbox("**Select y-axis**", st.session_state.prior_data_rocks.columns)
 
-                if selected_columns_y == 'Teufe [m] Mean':
+                if selected_columns_y == 'Teufe [m]':
                     is_linear = st.checkbox('**Would you like to add a linear fit?**')
 
                 else:

@@ -277,6 +277,7 @@ class Intervals:
         return data_set
 
 
+st.cache_data(ttl=3600)
 def Excel(df, sheet):
     import pandas as pd
     from io import BytesIO
@@ -296,6 +297,7 @@ def Excel(df, sheet):
     return processed_data
 
 
+@st.cache_data(ttl=3600)
 def add_logo():
     st.markdown(
         """
@@ -322,7 +324,7 @@ def add_logo():
     )   
     
 
-
+@st.cache_resource(ttl=3600)
 def DI(dataframe):
     import math
     
@@ -353,6 +355,7 @@ def Display():
     st.session_state.display = True
 
 
+@st.cache_resource(ttl=3600)
 def Control(data, cols, length, error, int_depth, rocks, number_of_intervals):
     required_columns = ["Zeit [s]", "Delta Zeit [s]", "Teufe [m]", "Delta Teufe [m]", "p Luft [bar]", "DZ [U/min]"]
     flag_control = -3
@@ -374,6 +377,7 @@ def Control(data, cols, length, error, int_depth, rocks, number_of_intervals):
     return flag_control
 
 
+@st.cache_resource(ttl=3600)
 def plot_intervals(interval_depths, interval_times, available_data):
     import plotly.graph_objects as go
     import numpy as np
@@ -417,6 +421,7 @@ def plot_intervals(interval_depths, interval_times, available_data):
     st.plotly_chart(fig)
 
 
+@st.cache_resource(ttl=3600)
 def main():
     import pandas as pd
     import numpy as np
