@@ -329,7 +329,7 @@ def main():
                 st.warning('**Please upload a proper dataset!**', icon='💹')
 
 
-    elif not st.session_state.process_flag:
+    elif not st.session_state.uploaded_data:
         st.warning('**Please complete data uploading part carefully!**', icon='💹')
 
 
