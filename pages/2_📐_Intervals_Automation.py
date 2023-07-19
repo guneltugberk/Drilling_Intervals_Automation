@@ -288,7 +288,8 @@ def Excel(df, sheet):
     import pandas as pd
     from io import BytesIO
     from pyxlsb import open_workbook as open_xlsb
-    
+    import xlsxwriter
+
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
     df.to_excel(writer, index=False, sheet_name=sheet)
@@ -330,7 +331,6 @@ def add_logo():
     )   
     
 
-@st.cache_resource(ttl=3600)
 def DI(dataframe):
     import math
     
@@ -361,7 +361,6 @@ def Display():
     st.session_state.display = True
 
 
-@st.cache_resource(ttl=3600)
 def Control(data, cols, length, error, int_depth, rocks, number_of_intervals):
     required_columns = ["Zeit [s]", "Delta Zeit [s]", "Teufe [m]", "Delta Teufe [m]", "p Luft [bar]", "DZ [U/min]"]
     flag_control = -3
@@ -427,7 +426,6 @@ def plot_intervals(interval_depths, interval_times, available_data):
     st.plotly_chart(fig)
 
 
-@st.cache_resource(ttl=3600)
 def main():
 
     st.markdown(

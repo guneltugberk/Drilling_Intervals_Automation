@@ -327,10 +327,12 @@ def main():
                             else:
                                 st.error('**Something went wrong, try again!**', icon="🚨")
                 else:
-                    st.info('**There are no missing values to handle.**', icon='💹')
+                    dropped_data = st.session_state.processed_data
 
                     if 'dropped_data' not in st.session_state:
-                        st.session_state.dropped_data = st.session_state.processed_data
+                        st.session_state.dropped_data = dropped_data
+                        
+                    st.info('**There are no missing values to handle.**', icon='💹')
 
             else:
                 st.warning('**Please upload a proper dataset!**', icon='💹')

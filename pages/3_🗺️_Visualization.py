@@ -124,7 +124,6 @@ def add_logo():
     )   
 
 
-@st.cache_resource(ttl=3600)
 def main():
 
     st.markdown(
