@@ -1,5 +1,10 @@
 import streamlit as st
 
+st.set_page_config(
+    page_title="Visualization",
+    page_icon="🗺️"
+    )
+
 
 @st.cache_data(ttl=3600)
 def correlation_correction(copy_df):
@@ -121,12 +126,7 @@ def add_logo():
 
 @st.cache_resource(ttl=3600)
 def main():
-    st.set_page_config(
-    page_title="Visualization",
-    page_icon="🗺️"
-    )
 
-    
     st.markdown(
     """
     <style>

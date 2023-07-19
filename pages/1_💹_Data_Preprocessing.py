@@ -1,5 +1,10 @@
 import streamlit as st
 
+st.set_page_config(
+        page_title='Data Uploading and Preprocessing',
+        page_icon='💹'
+    )
+
 
 class Upload:
     def __init__(self, data_source, sheet_name):
@@ -111,11 +116,6 @@ def dropNaN(dropped):
 def main():
     import time
     import pandas as pd
-
-    st.set_page_config(
-        page_title='Data Uploading and Preprocessing',
-        page_icon='💹'
-    )
 
     st.markdown(
         """

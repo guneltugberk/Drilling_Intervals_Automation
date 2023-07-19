@@ -1,5 +1,11 @@
 import streamlit as st
 
+st.set_page_config(
+    page_title="Drilling Intervals Automation",
+    page_icon="📐"
+    )
+
+
 class Intervals:
     @staticmethod
     @st.cache_resource(ttl=3600)
@@ -423,13 +429,6 @@ def plot_intervals(interval_depths, interval_times, available_data):
 
 @st.cache_resource(ttl=3600)
 def main():
-    import pandas as pd
-    import numpy as np
-
-    st.set_page_config(
-    page_title="Drilling Intervals Automation",
-    page_icon="📐"
-    )
 
     st.markdown(
     """
