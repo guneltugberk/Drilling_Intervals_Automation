@@ -271,7 +271,7 @@ def main():
                 if not refresh:
                     st.warning('**Please refresh the page and re-upload the dataset.**', icon='💹')
 
-        if 'processed_data' in st.session_state:
+        if st.session_state.processed_data:
             if missing_values.sum() > 0:
                 with st.form('MissingData'):
                     st.markdown("""
@@ -321,7 +321,7 @@ def main():
                     st.session_state.dropped_data = st.session_state.processed_data
 
         else:
-            st.warning('Please upload the dataset into proceed other steps.', icon='💹')
+            st.warning('Please upload the dataset to proceed into other steps.', icon='💹')
 
     elif not st.session_state.process_flag:
         st.warning('Please complete data uploading part carefully!', icon='💹')
