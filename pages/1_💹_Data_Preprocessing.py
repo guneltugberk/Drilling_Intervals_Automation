@@ -174,7 +174,7 @@ def main():
 
     if 'process_flag' not in st.session_state:
         st.session_state.process_flag = False
-    
+
     if st.session_state.confirm_upload:
         if uploaded_data is not None:
             if 'uploaded_data' not in st.session_state:
@@ -323,7 +323,7 @@ def main():
         else:
             st.warning('Please upload the dataset into proceed other steps.', icon='💹')
 
-    elif new_flag is None:
+    elif not st.session_state.process_flag:
         st.warning('Please complete data uploading part carefully!', icon='💹')
 
 
