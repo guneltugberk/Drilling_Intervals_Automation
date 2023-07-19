@@ -175,6 +175,9 @@ def main():
     if 'process_flag' not in st.session_state:
         st.session_state.process_flag = False
 
+    if 'processed_data' not in st.session_state:
+        st.session_state.processed_data = pd.DataFrame([])
+
     if st.session_state.confirm_upload:
         if uploaded_data is not None:
             if 'uploaded_data' not in st.session_state:
@@ -271,7 +274,7 @@ def main():
                 if not refresh:
                     st.warning('**Please refresh the page and re-upload the dataset.**', icon='💹')
 
-        if st.session_state.processed_data:
+        if not st.session_state.processed_data.empty:
             if missing_values.sum() > 0:
                 with st.form('MissingData'):
                     st.markdown("""
