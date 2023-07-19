@@ -172,27 +172,27 @@ def main():
     if 'confirm_upload' not in st.session_state:
         st.session_state.confirm_upload = False
 
-    if 'process_flag' not in st.session_state:
-        st.session_state.process_flag = False
+    if 'uploaded_data' not in st.session_state:
+        st.session_state.uploaded_data = None
 
     if 'processed_data' not in st.session_state:
-        st.session_state.processed_data = pd.DataFrame([])
+        st.session_state.processed_data = None
+
 
     if st.session_state.confirm_upload:
         if uploaded_data is not None:
-            if 'uploaded_data' not in st.session_state:
-                st.session_state.uploaded_data = uploaded_data
-
             if sheet.strip():
                 # Sheet name is provided
-                st.session_state.process_flag = True
-                st.success('Dataset has been uploaded!', icon="✅")
+                st.session_state.uploaded_data = uploaded_data
+                st.success('**Dataset has been uploaded!**', icon="✅")
             else:
-                st.error('Please enter a sheet name')
+                st.error('**Please enter a sheet name!**')
         else:
-            st.error('Please upload a dataset')
+            st.error('**Please upload a dataset!**')
 
-    if st.session_state.process_flag:
+    new_form = 0
+
+    if st.session_state.uploaded_data:
         with st.form('Processing'):
             st.markdown("""
                 <div class='stHeader'> Processing Data</div>
@@ -215,7 +215,7 @@ def main():
                         my_bar.progress(percent_complete + 1, text='**Dataset has been uploaded!**')
                         st.success('**Dataset has been processed!**', icon="✅")
                     elif percent_complete > 100 or percent_complete < 0:
-                        st.error(st.error('Something went wrong, try again!', icon="🚨"))
+                        st.error(st.error('**Something went wrong, try again!**', icon="🚨"))
 
                 refresh = None
 
@@ -249,8 +249,7 @@ def main():
                         data_frame = Upload(data_source=uploaded_data, sheet_name=sheet).read_file()
                         processed_data = processing(data_frame)[0]
 
-                        if 'processed_data' not in st.session_state:
-                            st.session_state.processed_data = processed_data
+                        st.session_state.processed_data = processed_data
 
                         st.table(data=st.session_state.processed_data.describe())
 
@@ -267,67 +266,71 @@ def main():
                         missing_values = st.session_state.processed_data.isna().sum()
 
                         st.table(data=missing_values)
+                        new_form = 1
 
                     except:
+                        st.session_state.processed_data = pd.DataFrame([])
                         st.warning('**Please supply all necessary informations.**', icon="✅")
 
                 if not refresh:
                     st.warning('**Please refresh the page and re-upload the dataset.**', icon='💹')
 
-        if not st.session_state.processed_data.empty:
-            if missing_values.sum() > 0:
-                with st.form('MissingData'):
-                    st.markdown("""
-                    <div class='stHeader'>Handling with Missing Data</div>
-                    """, unsafe_allow_html=True)
-                    option = st.selectbox(
-                        '**How would you like to manipulate the data?**',
-                        ('Drop NaN', 'Impute NaN'))
+        if new_form == 1:
+            if not st.session_state.processed_data.empty:
+                if missing_values.sum() > 0:
+                    with st.form('MissingData'):
+                        st.markdown("""
+                        <div class='stHeader'>Handling with Missing Data</div>
+                        """, unsafe_allow_html=True)
+                        option = st.selectbox(
+                            '**How would you like to manipulate the data?**',
+                            ('Drop NaN', 'Impute NaN'))
 
-                    st.write(f'**You have selected:** *{option}*')
+                        st.write(f'**You have selected:** *{option}*')
 
-                    confirmation = st.form_submit_button('Confirm Choice', type='primary')
+                        confirmation = st.form_submit_button('Confirm Choice', type='primary')
 
-                    if confirmation:
-                        if option == 'Drop NaN':
-                            dropped_data = dropNaN(st.session_state.processed_data)
+                        if confirmation:
+                            if option == 'Drop NaN':
+                                dropped_data = dropNaN(st.session_state.processed_data)
 
-                            if 'dropped_data' not in st.session_state:
-                                st.session_state.dropped_data = dropped_data
+                                if 'dropped_data' not in st.session_state:
+                                    st.session_state.dropped_data = dropped_data
 
-                            if st.session_state.dropped_data is not None:
-                                st.success('**All missing values are dropped!**', icon="✅")
+                                if st.session_state.dropped_data is not None:
+                                    st.success('**All missing values are dropped!**', icon="✅")
 
-                                st.markdown("""
-                                <div class='stHeader'>Number of Missing values</div>
-                                """, unsafe_allow_html=True)
+                                    st.markdown("""
+                                    <div class='stHeader'>Number of Missing values</div>
+                                    """, unsafe_allow_html=True)
 
-                                st.table(data=dropped_data.isna().sum())
+                                    st.table(data=dropped_data.isna().sum())
 
-                            elif st.session_state.dropped_data is None:
-                                st.warning('Please re-upload the dataset.', icon='💹')
+                                elif st.session_state.dropped_data is None:
+                                    st.warning('**Please re-upload the dataset.**', icon='💹')
+
+                                else:
+                                    st.error('**Something went wrong, try again!**', icon="🚨")
+
+                                st.divider()
+
+                            elif option == 'Impute NaN':
+                                st.info('Still developing')
 
                             else:
-                                st.error('Something went wrong, try again!', icon="🚨")
+                                st.error('**Something went wrong, try again!**', icon="🚨")
+                else:
+                    st.info('**There are no missing values to handle.**', icon='💹')
 
-                            st.divider()
+                    if 'dropped_data' not in st.session_state:
+                        st.session_state.dropped_data = st.session_state.processed_data
 
-                        elif option == 'Impute NaN':
-                            st.info('Still developing')
-
-                        else:
-                            st.error('Something went wrong, try again!', icon="🚨")
             else:
-                st.info('There are no missing values to handle.', icon='💹')
+                st.warning('**Please upload a proper dataset!**', icon='💹')
 
-                if 'dropped_data' not in st.session_state:
-                    st.session_state.dropped_data = st.session_state.processed_data
-
-        else:
-            st.warning('Please upload the dataset to proceed into other steps.', icon='💹')
 
     elif not st.session_state.process_flag:
-        st.warning('Please complete data uploading part carefully!', icon='💹')
+        st.warning('**Please complete data uploading part carefully!**', icon='💹')
 
 
 if __name__ == '__main__':
