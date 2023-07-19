@@ -16,7 +16,7 @@ class Upload:
                 self.df = pd.read_excel(self.data_source, sheet_name=self.sheet_name)
             except:
                 st.warning('**Please enter a correct sheet name!**', icon="✅")
-                
+
         elif self.data_source.name.endswith(".csv"):
             # Read CSV file
             self.df = pd.read_csv(self.data_source)
@@ -52,8 +52,8 @@ def add_logo():
         </style>
         """,
         unsafe_allow_html=True,
-    )   
-    
+    )
+
 
 def ConfirmedUpload():
     st.session_state.confirm_upload = True
@@ -87,7 +87,6 @@ def processing(well_data):
 
         df = df.apply(pd.to_numeric, errors='coerce')
 
-
         return df, len(df['Zeit [s]']), len(df.columns)
 
     return None
@@ -113,41 +112,40 @@ def main():
     import pandas as pd
 
     st.set_page_config(
-    page_title='Data Uploading and Preprocessing',
-    page_icon='💹'
+        page_title='Data Uploading and Preprocessing',
+        page_icon='💹'
     )
 
-
     st.markdown(
-    """
-    <style>
-    .stTitle {
-        font-size: 40px;
-        font-weight: bold;
-        color: #FF9933;
-        margin-bottom: 20px;
-    }
-
-    .stHeader {
-        font-size: 30px;
-        font-weight: bold;
-        color: #FF9933;
-        margin-bottom: 5px;
+        """
+        <style>
+        .stTitle {
+            font-size: 40px;
+            font-weight: bold;
+            color: #FF9933;
+            margin-bottom: 20px;
+        }
     
-    }
-
-    .stMarkdown {
-        font-size: 16px;
-        line-height: 1.6;
-        color: #ffffff;
-    }
-    </style>
-    """
-    , unsafe_allow_html=True
-)
+        .stHeader {
+            font-size: 30px;
+            font-weight: bold;
+            color: #FF9933;
+            margin-bottom: 5px;
+    
+        }
+    
+        .stMarkdown {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #ffffff;
+        }
+        </style>
+        """
+        , unsafe_allow_html=True
+    )
 
     add_logo()
-    
+
     st.markdown("""
         <div class='stTitle'> Data Preprocessing </div>
     """, unsafe_allow_html=True)
@@ -168,10 +166,12 @@ def main():
     sheet = st.text_input("**Enter the sheet name**", placeholder='Sheet1')
     st.info('**After uploading the dataset and entering the name of the sheet, please hit *Upload* button**', icon='🎯')
 
-    confirm_upload = st.button('Upload', on_click=ConfirmedUpload, type='primary')
+    st.button('Upload', on_click=ConfirmedUpload, type='primary')
 
     if 'confirm_upload' not in st.session_state:
-        st.session_state.confirm_upload = confirm_upload
+        st.session_state.confirm_upload = False
+
+    new_flag = None
 
     if st.session_state.confirm_upload:
         if uploaded_data is not None:
@@ -180,13 +180,18 @@ def main():
 
             if sheet.strip():
                 # Sheet name is provided
+                new_flag = 1
+
+                if 'new_flag' not in st.session_state:
+                    st.session_state.new_flag = new_flag
+
                 st.success('Dataset has been uploaded!', icon="✅")
             else:
                 st.error('Please enter a sheet name')
         else:
             st.error('Please upload a dataset')
 
-    if st.session_state.confirm_upload:
+    if st.session_state.new_flag == 1:
         with st.form('Processing'):
             st.markdown("""
                 <div class='stHeader'> Processing Data</div>
@@ -218,13 +223,17 @@ def main():
 
                     if file_name.endswith(".xlsx"):
                         file_name_without_extension = file_name[:-5]
-                        st.markdown(f"""<div class='stHeader'>Name of the Well: <i>{file_name_without_extension}</i></div>""", unsafe_allow_html=True)
+                        st.markdown(
+                            f"""<div class='stHeader'>Name of the Well: <i>{file_name_without_extension}</i></div>""",
+                            unsafe_allow_html=True)
 
                         refresh = True
 
                     elif file_name.endswith(".csv"):
                         file_name_without_extension = file_name[:-4]
-                        st.markdown(f"""<div class='stHeader'>Name of the Well: <i>{file_name_without_extension}</i></div>""", unsafe_allow_html=True)
+                        st.markdown(
+                            f"""<div class='stHeader'>Name of the Well: <i>{file_name_without_extension}</i></div>""",
+                            unsafe_allow_html=True)
 
                         refresh = True
 
@@ -243,24 +252,24 @@ def main():
                             st.session_state.processed_data = processed_data
 
                         st.table(data=st.session_state.processed_data.describe())
-    
+
                         num_features = processing(data_frame)[2]
                         num_obs = processing(data_frame)[1]
-    
+
                         st.caption(f'**Number of Features:** *{num_features}*')
                         st.caption(f'**Number of Observations:** *{num_obs}*')
                         st.divider()
-    
+
                         st.markdown("""
                         <div class='stHeader'>Number of Missing Values</div>
                         """, unsafe_allow_html=True)
                         missing_values = st.session_state.processed_data.isna().sum()
-    
+
                         st.table(data=missing_values)
-                        
+
                     except:
                         st.warning('**Please supply all necessary informations.**', icon="✅")
-                    
+
                 if not refresh:
                     st.warning('**Please refresh the page and re-upload the dataset.**', icon='💹')
 
@@ -291,7 +300,7 @@ def main():
                                 st.markdown("""
                                 <div class='stHeader'>Number of Missing values</div>
                                 """, unsafe_allow_html=True)
-                                
+
                                 st.table(data=dropped_data.isna().sum())
 
                             elif st.session_state.dropped_data is None:
@@ -315,6 +324,9 @@ def main():
 
         else:
             st.warning('Please upload the dataset into proceed other steps.', icon='💹')
+
+    elif new_flag is None:
+        st.warning('Please complete data uploading part carefully!', icon='💹')
 
 
 if __name__ == '__main__':
