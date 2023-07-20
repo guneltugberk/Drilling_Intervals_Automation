@@ -311,7 +311,7 @@ def main():
                                     <div class='stHeader'>Number of Missing values</div>
                                     """, unsafe_allow_html=True)
 
-                                    st.table(data=dropped_data.isna().sum())
+                                    st.table(data=st.session_state.dropped_data.isna().sum())
 
                                 elif st.session_state.dropped_data is None:
                                     st.warning('**Please re-upload the dataset.**', icon='💹')

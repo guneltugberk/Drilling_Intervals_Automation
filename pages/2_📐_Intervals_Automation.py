@@ -9,12 +9,81 @@ st.set_page_config(
 class Intervals:
     @staticmethod
     @st.cache_resource(ttl=3600)
+    def train_test_split(data, test_size=0.2, random_seed=None):
+        import numpy as np
+
+        # Set random seed for reproducibility
+        if random_seed is not None:
+            np.random.seed(random_seed)
+
+        # Shuffle the data
+        np.random.shuffle(data)
+
+        # Number of elements to include in the test set
+        num_test = int(len(data) * test_size)
+
+        # Use the first 'num_test' elements for the test set
+        test = data[:num_test]
+
+        # Use the rest for the training set
+        train = data[num_test:]
+
+        return train, test
+    
+    @staticmethod
+    @st.cache_resource(ttl=3600)
+    def custom_pr_auc_score(_classifier, X_train):
+        from sklearn.metrics import precision_recall_curve, auc
+        from sklearn.ensemble import IsolationForest
+        import numpy as np
+
+        # Fit the classifier to the training data
+        _classifier.fit(X_train)
+
+        # Get the outlier scores for X_train using the decision_function
+        if hasattr(_classifier, 'kneighbors_graph'):
+            outlier_scores = -_classifier.negative_outlier_factor_
+        else:
+            outlier_scores = -_classifier.score_samples(X_train)
+
+        # Calculate precision-recall curve and AUC
+        precision, recall, _ = precision_recall_curve(np.ones(len(X_train)), outlier_scores)
+        pr_auc = auc(recall, precision)
+
+        return pr_auc
+
+    @staticmethod
+    @st.cache_resource(ttl=3600)
+    def feature_wise_isolation_forest(scaled, real, n, c):
+        from sklearn.ensemble import IsolationForest
+
+        best_iforest = IsolationForest(n_estimators=n,
+                                    contamination=c)
+
+        # Fit the best Isolation Forest model to the entire training set
+        best_iforest.fit(scaled)
+
+        # Predict outliers on the test set using both models
+        outlier_scores_if = best_iforest.decision_function(scaled)
+
+        # Extract the outliers and the inliers (non-outliers) from the test set for both models
+        outliers_if = real[outlier_scores_if < 0]
+        inliers_if = real[outlier_scores_if >= 0]
+
+
+        return inliers_if
+
+    @staticmethod
+    @st.cache_resource(ttl=3600)
     def outliers(data, cols, threshold):
         import pandas as pd
         import numpy as np
         from scipy import stats
+        from sklearn.ensemble import IsolationForest
+        from sklearn.preprocessing import StandardScaler
 
-        data_frame = pd.DataFrame([])
+
+        data_frame = data.copy()
 
         delta_teufe = np.array(data.loc[:, 'Delta Teufe [m]'])
         teufe = np.array(data.loc[:, 'Teufe [m]'])
@@ -33,37 +102,84 @@ class Intervals:
             filtered_values_list = []
 
             for col in cols:
-                desired_values = removed_data[col]
+                if col == 'p Luft [bar]' or col == 'DZ [U/min]' or col == 'Q Luft [Nm3/min]':
+                    desired_values = removed_data[col]
 
-                z_score_desired_values = stats.zscore(desired_values)
-                filtered_desired_values = desired_values[np.abs(z_score_desired_values) < threshold]
+                    z_score_desired_values = stats.zscore(desired_values)
+                    filtered_desired_values = desired_values[np.abs(z_score_desired_values) < threshold]
 
-                if len(filtered_desired_values) > 0:
-                    filtered_values_list.append(filtered_desired_values)
+                    if len(filtered_desired_values) > 0:
+                        filtered_values_list.append(filtered_desired_values)
 
-            # Find the maximum length among the filtered values
-            max_length = max(len(filtered_values) for filtered_values in filtered_values_list)
+            min_length_z = min(len(l) for l in filtered_values_list)
+            sliced_arrays_z = [arr[:min_length_z] for arr in filtered_values_list]
 
-            # Pad the filtered values to match the maximum length
-            padded_filtered_values_list = []
-            for filtered_values in filtered_values_list:
-                padded_filtered_values_list.append(
-                    np.pad(filtered_values, (0, max_length - len(filtered_values)), mode='constant'))
+            columns_z = ['p Luft [bar]', 'DZ [U/min]', 'Q Luft [Nm3/min]']
 
-            # Create columns in the data_frame and assign the padded filtered values
-            for col, padded_filtered_values in zip(cols, padded_filtered_values_list):
-                if len(data_frame.columns) > 0:
-                    if len(padded_filtered_values) == len(data_frame):
-                        data_frame[col] = padded_filtered_values
-                    else:
-                        raise ValueError(
-                            f"The length of values for column '{col}' is not equal to the existing columns in data_frame.")
-                else:
-                    data_frame[col] = padded_filtered_values
-        else:
-            return st.warning('Please make sure that the dataset is convenient!')
+            data_z = {col: arr for col, arr in zip(columns_z, sliced_arrays_z)}
+            df_z = pd.DataFrame(data_z)
 
-        return data_frame
+            data_frame = data_frame.iloc[:len(df_z)]
+            data_frame.loc[:, columns_z] = data_frame.loc[:, columns_z].replace(data_z)
+            data_frame.reset_index(drop=True, inplace=True)
+
+            print(data_frame)
+
+        scaler = StandardScaler()
+
+        p_luft_if = np.array(data_frame.loc[:, 'p Luft [bar]']).reshape(-1, 1)
+        dz_if = np.array(data_frame.loc[:, 'DZ [U/min]']).reshape(-1, 1)
+
+        scaled_p_luft = scaler.fit_transform(p_luft_if)
+        scaled_dz = scaler.fit_transform(dz_if)
+
+        X_train_p_luft, X_test_p_luft = Intervals.train_test_split(scaled_p_luft, test_size=0.2, random_seed=42)
+        X_train_dz, X_test_dz = Intervals.train_test_split(scaled_dz, test_size=0.2, random_seed=42)
+
+        n_neighbors_list = [50, 75, 100, 125, 150, 175, 200]
+        contamination_list = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35]
+        
+        best_score_p_luft = 0
+        best_params_p_luft = {}
+        
+        best_score_dz = 0
+        best_params_dz = {}
+
+        for n in n_neighbors_list:
+            for c in contamination_list:
+                iforest = IsolationForest(n_estimators=n, contamination=c)
+
+                score_p_luft = Intervals.custom_pr_auc_score(iforest, X_train_p_luft)
+                score_dz = Intervals.custom_pr_auc_score(iforest, X_train_dz)
+
+                if score_p_luft > best_score_p_luft:
+                    best_score_p_luft = score_p_luft
+                    best_params_p_luft = {'n_estimators': n, 'contamination': c}
+
+                if score_dz > best_score_dz:
+                    best_score_dz = score_dz
+                    best_params_dz = {'n_estimators': n, 'contamination': c}
+        
+        inliers_p_luft = Intervals.feature_wise_isolation_forest(scaled_p_luft, np.array(data_frame.loc[:, 'p Luft [bar]']), best_params_p_luft['n_estimators'], best_params_p_luft['contamination'])
+        inliers_dz = Intervals.feature_wise_isolation_forest(scaled_dz, np.array(data_frame.loc[:, 'DZ [U/min]']), best_params_dz['n_estimators'], best_params_dz['contamination'])
+
+        len_list = [inliers_p_luft, inliers_dz]
+
+        columns = ['p Luft [bar]', 'DZ [U/min]']
+
+        min_length = min(len(ml) for ml in len_list)
+        sliced_arrays = [arr[:min_length] for arr in len_list]
+
+        data = {col: arr for col, arr in zip(columns, sliced_arrays)}
+        df = pd.DataFrame(data)
+
+        existing_df = data_frame.iloc[:len(df)]
+        existing_df.loc[:, columns] = data_frame.loc[:, columns].replace(data)
+        existing_df.reset_index(drop=True, inplace=True)
+        print(existing_df)
+        existing_df = existing_df[existing_df['p Luft [bar]'] != 0]
+
+        return existing_df
 
     @staticmethod
     def Energy(data):
