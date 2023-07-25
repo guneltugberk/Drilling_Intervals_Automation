@@ -46,10 +46,20 @@ class Intervals:
         removed_data = data.drop(data.index[unsatisfied_indexes_teufe])
 
         p_luft = np.array(removed_data.loc[:, 'p Luft [bar]'])
-        DZ = np.array(removed_data.loc[:, 'DZ [U/min]'])
         
-        unsatisfied_indexes_pluft = np.where((p_luft < 2) | (DZ == 0))[0]
+        unsatisfied_indexes_pluft = np.where(p_luft < 2)[0]
         removed_data = removed_data.drop(removed_data.index[unsatisfied_indexes_pluft])
+
+        DZ = np.array(removed_data.loc[:, 'DZ [U/min]'])
+        dz_mean = DZ.mean()
+        dz_std = DZ.std()
+
+        upper = dz_mean + 3 * dz_std
+        lower = dz_mean - 3 * dz_std
+
+        unsatisfied = np.where((DZ > upper) | (DZ < lower))[0]
+
+        removed_data = removed_data.drop(removed_data.index[unsatisfied])
 
         if isinstance(removed_data, pd.DataFrame):
             # Create a list of the filtered values for each column
@@ -542,6 +552,9 @@ def main():
         depth_intervals = []
         formations = []
         
+        if 'formation_info' not in st.session_state:
+            st.session_state.formation_info = None
+
         if check_formation:
             st.markdown(f"""
             <div class='stHeader'>Encountered Formations for <i>{file_name_without_extension}</i></div>
@@ -558,16 +571,14 @@ def main():
                 depth_intervals.append((interval_start, interval_end))
                 formations.append(formation)
             
-            if 'formation_info' not in st.session_state:
-                st.session_state.formation_info = True
+            st.session_state.formation_info = True
 
         else:
             num_intervals = None
             depth_intervals = None
             formations = None
 
-            if 'formation_info' not in st.session_state:
-                st.session_state.formation_info = False
+            st.session_state.formation_info = False
 
         
         check_water = st.checkbox('**Do you have formartion water information?**')
@@ -642,20 +653,21 @@ def main():
                 st.table(data=st.session_state.prior_data.describe())
                 st.divider()
 
-                if st.session_state.formation_info:
-                
-                    prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
-                    stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
+                if st.session_state.formation_info is not None:
 
-                    if st.session_state.pipe_info:
-                        stats_data_rocks = pipe(stats_data_rocks, pipe_weight)
+                    if st.session_state.formation_info:
+                        prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
+                        stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
 
-                if not st.session_state.formation_info:
-                    prior_data_rocks = st.session_state.prior_data
-                    stats_data_rocks = st.session_state.stats_data
+                        if st.session_state.pipe_info:
+                            stats_data_rocks = pipe(stats_data_rocks, pipe_weight)
 
-                    if st.session_state.pipe_info:
-                        stats_data_rocks = pipe(stats_data_rocks, pipe_weight)
+                    if not st.session_state.formation_info:
+                        prior_data_rocks = st.session_state.prior_data
+                        stats_data_rocks = st.session_state.stats_data
+
+                        if st.session_state.pipe_info:
+                            stats_data_rocks = pipe(stats_data_rocks, pipe_weight)
 
                 if not prior_data_rocks.empty and not stats_data_rocks.empty:
                     if 'prior_data_rocks' not in st.session_state:
