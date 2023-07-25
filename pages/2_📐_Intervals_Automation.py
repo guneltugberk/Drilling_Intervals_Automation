@@ -29,49 +29,6 @@ class Intervals:
         train = data[num_test:]
 
         return train, test
-    
-    @staticmethod
-    @st.cache_resource(ttl=3600)
-    def custom_pr_auc_score(_classifier, X_train):
-        from sklearn.metrics import precision_recall_curve, auc
-        from sklearn.ensemble import IsolationForest
-        import numpy as np
-
-        # Fit the classifier to the training data
-        _classifier.fit(X_train)
-
-        # Get the outlier scores for X_train using the decision_function
-        if hasattr(_classifier, 'kneighbors_graph'):
-            outlier_scores = -_classifier.negative_outlier_factor_
-        else:
-            outlier_scores = -_classifier.score_samples(X_train)
-
-        # Calculate precision-recall curve and AUC
-        precision, recall, _ = precision_recall_curve(np.ones(len(X_train)), outlier_scores)
-        pr_auc = auc(recall, precision)
-
-        return pr_auc
-
-    @staticmethod
-    @st.cache_resource(ttl=3600)
-    def feature_wise_isolation_forest(scaled, real, n, c):
-        from sklearn.ensemble import IsolationForest
-
-        best_iforest = IsolationForest(n_estimators=n,
-                                    contamination=c)
-
-        # Fit the best Isolation Forest model to the entire training set
-        best_iforest.fit(scaled)
-
-        # Predict outliers on the test set using both models
-        outlier_scores_if = best_iforest.decision_function(scaled)
-
-        # Extract the outliers and the inliers (non-outliers) from the test set for both models
-        outliers_if = real[outlier_scores_if < 0]
-        inliers_if = real[outlier_scores_if >= 0]
-
-
-        return inliers_if
 
     @staticmethod
     @st.cache_resource(ttl=3600)
@@ -79,9 +36,6 @@ class Intervals:
         import pandas as pd
         import numpy as np
         from scipy import stats
-        from sklearn.ensemble import IsolationForest
-        from sklearn.preprocessing import StandardScaler
-
 
         data_frame = data.copy()
 
@@ -123,63 +77,7 @@ class Intervals:
             data_frame.loc[:, columns_z] = data_frame.loc[:, columns_z].replace(data_z)
             data_frame.reset_index(drop=True, inplace=True)
 
-            print(data_frame)
-
-        scaler = StandardScaler()
-
-        p_luft_if = np.array(data_frame.loc[:, 'p Luft [bar]']).reshape(-1, 1)
-        dz_if = np.array(data_frame.loc[:, 'DZ [U/min]']).reshape(-1, 1)
-
-        scaled_p_luft = scaler.fit_transform(p_luft_if)
-        scaled_dz = scaler.fit_transform(dz_if)
-
-        X_train_p_luft, X_test_p_luft = Intervals.train_test_split(scaled_p_luft, test_size=0.2, random_seed=42)
-        X_train_dz, X_test_dz = Intervals.train_test_split(scaled_dz, test_size=0.2, random_seed=42)
-
-        n_neighbors_list = [50, 75, 100, 125, 150, 175, 200]
-        contamination_list = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35]
-        
-        best_score_p_luft = 0
-        best_params_p_luft = {}
-        
-        best_score_dz = 0
-        best_params_dz = {}
-
-        for n in n_neighbors_list:
-            for c in contamination_list:
-                iforest = IsolationForest(n_estimators=n, contamination=c)
-
-                score_p_luft = Intervals.custom_pr_auc_score(iforest, X_train_p_luft)
-                score_dz = Intervals.custom_pr_auc_score(iforest, X_train_dz)
-
-                if score_p_luft > best_score_p_luft:
-                    best_score_p_luft = score_p_luft
-                    best_params_p_luft = {'n_estimators': n, 'contamination': c}
-
-                if score_dz > best_score_dz:
-                    best_score_dz = score_dz
-                    best_params_dz = {'n_estimators': n, 'contamination': c}
-        
-        inliers_p_luft = Intervals.feature_wise_isolation_forest(scaled_p_luft, np.array(data_frame.loc[:, 'p Luft [bar]']), best_params_p_luft['n_estimators'], best_params_p_luft['contamination'])
-        inliers_dz = Intervals.feature_wise_isolation_forest(scaled_dz, np.array(data_frame.loc[:, 'DZ [U/min]']), best_params_dz['n_estimators'], best_params_dz['contamination'])
-
-        len_list = [inliers_p_luft, inliers_dz]
-
-        columns = ['p Luft [bar]', 'DZ [U/min]']
-
-        min_length = min(len(ml) for ml in len_list)
-        sliced_arrays = [arr[:min_length] for arr in len_list]
-
-        data = {col: arr for col, arr in zip(columns, sliced_arrays)}
-        df = pd.DataFrame(data)
-
-        existing_df = data_frame.iloc[:len(df)]
-        existing_df.loc[:, columns] = data_frame.loc[:, columns].replace(data)
-        existing_df.reset_index(drop=True, inplace=True)
-        print(existing_df)
-        existing_df = existing_df[existing_df['p Luft [bar]'] != 0]
-
-        return existing_df
+        return data_frame
 
     @staticmethod
     def Energy(data):
@@ -217,7 +115,7 @@ class Intervals:
             cols.append('Hydraulic Power [kW]')
 
         if 'DZ [U/min]' in cols and 'Andruck [bar]' in cols and 'vB [m/h]' in cols:
-            cols.append('Drillibility Index [kN/mm]')
+            cols.append('Pseudo Drillibility Index [kN/mm]')
 
         depth = np.array(data['Teufe [m]'].values)
         deltaTime = np.array(data['Delta Zeit [s]'].values)
@@ -451,11 +349,11 @@ def DI(dataframe):
     import math
     
     dataframe.loc[:, 'Andruck [kPa]'] = dataframe.loc[:, 'Andruck [bar]'] * 100
-    dataframe.loc[:, 'Gravitational Force [kN]'] = dataframe.loc[:, 'Andruck [kPa]'] * math.pi * (0.152**2) / 4
+    dataframe.loc[:, 'Pseudo Gravitational Force [kN]'] = dataframe.loc[:, 'Andruck [kPa]'] * math.pi * (0.152**2) / 4
 
     drillibility = []
 
-    for pr, n, w in zip(dataframe.loc[:, 'vB [m/h]'], dataframe.loc[:, 'DZ [U/min]'], dataframe.loc[:, 'Gravitational Force [kN]']):
+    for pr, n, w in zip(dataframe.loc[:, 'vB [m/h]'], dataframe.loc[:, 'DZ [U/min]'], dataframe.loc[:, 'Pseudo Gravitational Force [kN]']):
         if pr == 0:
             di = 0
             
@@ -464,9 +362,22 @@ def DI(dataframe):
             
         drillibility.append(di)
 
-    dataframe.loc[:, 'Drillibility Index [kN/mm]'] = drillibility
+    dataframe.loc[:, 'Pseudo Drillibility Index [kN/mm]'] = drillibility
 
     return dataframe
+
+
+def pipe(interval_df, W):
+    interval_df_copy = interval_df.copy()
+
+    for i in range(len(interval_df_copy)):
+        if i == 0:
+            interval_df_copy.loc[i, 'Pipe Section Weight [kg]'] = W
+        
+        else:
+            interval_df_copy.loc[i, 'Pipe Section Weight [kg]'] = (i+1) * W
+
+    return interval_df_copy 
     
 
 def Start():
@@ -618,10 +529,15 @@ def main():
         error_rate = st.number_input('**Error Rate, in %**', min_value=0, max_value=100)
         threshold = st.number_input('**Threshold, an integer**', min_value=1, max_value=15)
 
-        check_formation = st.checkbox('**Do you have formation informations?**')
+        pipe_check = st.checkbox('**Do you have pipe weight information?**')
 
-        if 'check_formation' not in st.session_state:
-            st.session_state.check_formation = check_formation
+        if pipe_check:
+            pipe_weight = st.number_input('**Please specify the weight of one drill pipe, in kg',min_value=0)
+
+            if 'pipe_info' not in st.session_state:
+                st.session_state.pipe_info = True
+
+        check_formation = st.checkbox('**Do you have formation informations?**')
 
         depth_intervals = []
         formations = []
@@ -641,24 +557,34 @@ def main():
 
                 depth_intervals.append((interval_start, interval_end))
                 formations.append(formation)
+            
+            if 'formation_info' not in st.session_state:
+                st.session_state.formation_info = True
 
         else:
             num_intervals = None
             depth_intervals = None
             formations = None
 
+            if 'formation_info' not in st.session_state:
+                st.session_state.formation_info = False
+
         
         check_water = st.checkbox('**Do you have formartion water information?**')
-
-        if 'check_water' not in st.session_state:
-            st.session_state.check_water = check_water
 
         if check_water:
             formation_water = st.number_input('**Encountered Formation Water Depth, in m**', min_value=0)
 
             if 'formation_water' not in st.session_state or st.session_state.formation_water != formation_water:
                 st.session_state.formation_water = formation_water
+
+            if 'water_info' not in st.session_state:
+                st.session_state.water_info = True
         
+        else:
+            if 'water_info' not in st.session_state:
+                st.session_state.water_info = False
+
         columns = st.multiselect(
             label='**Columns to be used**',
             options=st.session_state.dropped_data.columns,
@@ -716,14 +642,20 @@ def main():
                 st.table(data=st.session_state.prior_data.describe())
                 st.divider()
 
-                if check_formation:
+                if st.session_state.formation_info:
                 
                     prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
                     stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
 
-                if not check_formation:
+                    if st.session_state.pipe_info:
+                        stats_data_rocks = pipe(stats_data_rocks, pipe_weight)
+
+                if not st.session_state.formation_info:
                     prior_data_rocks = st.session_state.prior_data
                     stats_data_rocks = st.session_state.stats_data
+
+                    if st.session_state.pipe_info:
+                        stats_data_rocks = pipe(stats_data_rocks, pipe_weight)
 
                 if not prior_data_rocks.empty and not stats_data_rocks.empty:
                     if 'prior_data_rocks' not in st.session_state:
