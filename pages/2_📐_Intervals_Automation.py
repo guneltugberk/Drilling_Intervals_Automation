@@ -542,7 +542,7 @@ def main():
         pipe_check = st.checkbox('**Do you have pipe weight information?**')
 
         if pipe_check:
-            pipe_weight = st.number_input('**Please specify the weight of one drill pipe, in kg',min_value=0)
+            pipe_weight = st.number_input('**Please specify the weight of one drill pipe, in kg**', min_value=0)
 
             if 'pipe_info' not in st.session_state:
                 st.session_state.pipe_info = True
@@ -599,7 +599,8 @@ def main():
         columns = st.multiselect(
             label='**Columns to be used**',
             options=st.session_state.dropped_data.columns,
-            default=['Zeit [s]', 'Delta Zeit [s]', 'Teufe [m]', 'Delta Teufe [m]', 'p Luft [bar]', 'DZ [U/min]']
+            default=['Zeit [s]', 'Delta Zeit [s]', 'Teufe [m]', 'Delta Teufe [m]', 'vB [m/h]', 'DZ [U/min]', 'Andruck [bar]', 'Drehdruck [bar]', 'p Luft [bar]', 'Q Luft [Nm3/min]'],
+            disabled=True
         )
 
 
