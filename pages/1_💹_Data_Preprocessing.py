@@ -132,7 +132,6 @@ def main():
             font-weight: bold;
             color: #FF9933;
             margin-bottom: 5px;
-    
         }
     
         .stMarkdown {
@@ -140,6 +139,7 @@ def main():
             line-height: 1.6;
             color: #ffffff;
         }
+
         </style>
         """
         , unsafe_allow_html=True
@@ -151,9 +151,10 @@ def main():
         <div class='stTitle'> Data Preprocessing </div>
     """, unsafe_allow_html=True)
 
-    st.info("Uploaded dataset must include the following features")
+    st.info("**Uploaded dataset's feature must be in the SI unit system. Furthermore, the structure of the dataset must be as follows:**")
 
-    data = [['Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation',
+    data = [['[s]', '[s]', '[m]', '[m]', '[m/h]', '[rad]', '[U/min]',
+             '[bar]', '[bar]', '[bar]', '[Nm3/min]'], ['Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation',
              'Observation', 'Observation', 'Observation', 'Observation']]
 
     columns = ['Zeit', 'Delta Zeit', 'Teufe', 'Delta Teufe', 'vB', 'RotWinkel', 'DZ', 'Andruck', 'Drehdruck', 'p Luft',
@@ -162,6 +163,7 @@ def main():
     sample = pd.DataFrame(data, columns=columns)
     st.table(data=sample)
 
+    st.info("**If your dataset is in the format of .xlsx, you must enter a valid sheet name. Otherwise, you do not need to specify a sheet name.**")
     uploaded_data = st.file_uploader("**Please upload your data file**", type=['csv', 'xlsx'],
                                      accept_multiple_files=False)
     sheet = st.text_input("**Enter the sheet name**", placeholder='Sheet1')

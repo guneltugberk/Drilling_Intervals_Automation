@@ -36,21 +36,22 @@ class Intervals:
         import pandas as pd
         import numpy as np
         from scipy import stats
+        import re
 
         data_frame = data.copy()
 
-        delta_teufe = np.array(data.loc[:, 'Delta Teufe [m]'])
-        teufe = np.array(data.loc[:, 'Teufe [m]'])
+        delta_teufe = np.array(data.filter(regex=r'(?i)^Delta Teufe'))
+        teufe = np.array(data.filter(regex=r'(?i)^Teufe'))
 
         unsatisfied_indexes_teufe = np.where((teufe < 0) | (delta_teufe <= 0.001))[0]
         removed_data = data.drop(data.index[unsatisfied_indexes_teufe])
 
-        p_luft = np.array(removed_data.loc[:, 'p Luft [bar]'])
+        p_luft = np.array(removed_data.filter(regex=r'(?i)^p Luft'))
         
         unsatisfied_indexes_pluft = np.where(p_luft < 2)[0]
         removed_data = removed_data.drop(removed_data.index[unsatisfied_indexes_pluft])
 
-        DZ = np.array(removed_data.loc[:, 'DZ [U/min]'])
+        DZ = np.array(removed_data.filter(regex=r'(?i)^DZ'))
         dz_mean = DZ.mean()
         dz_std = DZ.std()
 
@@ -66,7 +67,7 @@ class Intervals:
             filtered_values_list = []
 
             for col in cols:
-                if col == 'p Luft [bar]' or col == 'DZ [U/min]' or col == 'Q Luft [Nm3/min]':
+                if re.match(r'^(p Luft|DZ|Q Luft)', col, re.IGNORECASE):
                     desired_values = removed_data[col]
 
                     z_score_desired_values = stats.zscore(desired_values)
@@ -78,7 +79,13 @@ class Intervals:
             min_length_z = min(len(l) for l in filtered_values_list)
             sliced_arrays_z = [arr[:min_length_z] for arr in filtered_values_list]
 
-            columns_z = ['p Luft [bar]', 'DZ [U/min]', 'Q Luft [Nm3/min]']
+            columns_z = []
+
+            for col in cols:
+                match = re.match(r'^(p Luft|DZ|Q Luft)', col, re.IGNORECASE)
+
+                if match:
+                    columns_z.append(col)
 
             data_z = {col: arr for col, arr in zip(columns_z, sliced_arrays_z)}
             df_z = pd.DataFrame(data_z)
@@ -93,12 +100,13 @@ class Intervals:
     def Energy(data):
         energy = []
 
-        for p, q in zip(data.loc[:, 'p Luft [bar]'], data.loc[:, 'Q Luft [Nm3/min]']):
+        for p, q in zip(data.loc[:, 'p Luft [bar]'].values, data.loc[:, 'Q Luft [Nm3/min]'].values):
             energy_value = (p * 14.503 * q * 264.172052) / 1714
             energy_value = energy_value * 0.745699872
             energy.append(energy_value)
 
         data.loc[:, 'Hydraulic Power [kW]'] = energy
+
 
         return data
 
@@ -107,6 +115,7 @@ class Intervals:
     def CalculateIntervals(data, cols, interval_size, error):
         import pandas as pd
         import numpy as np
+        import re
 
         global interval_count
 
@@ -117,20 +126,19 @@ class Intervals:
         statistical_df = pd.DataFrame(columns=statistical_columns)
 
         for col in cols:
-            if col == 'Zeit [s]' or col == 'Teufe [m]':
-                if np.isnan(data[col]).any() or len(data[col]) == 0:
-                    st.warning('Dataset contains missing or empty values in the critical features.')
+            if re.match(r'^(Andruck|DZ|vB)', col, re.IGNORECASE):
+                cols.append('Pseudo Drillibility Index [kN/mm]')
 
-        if 'p Luft [bar]' in cols and 'Q Luft [Nm3/min]' in cols:
-            cols.append('Hydraulic Power [kW]')
+            if re.match(r'^(p Luft|Q Luft)', col, re.IGNORECASE):
+                cols.append('Hydraulic Power [kW]')
 
-        if 'DZ [U/min]' in cols and 'Andruck [bar]' in cols and 'vB [m/h]' in cols:
-            cols.append('Pseudo Drillibility Index [kN/mm]')
+        teufe_columns = [col for col in cols if col.strip().lower().startswith('teufe')]
+        zeit_columns = [col for col in cols if col.strip().lower().startswith('zeit')]
 
-        depth = np.array(data['Teufe [m]'].values)
-        deltaTime = np.array(data['Delta Zeit [s]'].values)
+        depth = np.array(data.loc[:, teufe_columns[0]].values)
+        deltaTime = np.array(data.filter(regex=r'(?i)^Delta Zeit').values)
 
-        interval_count = round((max(depth) - min(depth)) / interval_size)
+        interval_count = np.around((np.max(depth) - np.min(depth)) / interval_size).astype(int)
         start_index = 0
         depth_interval = []
         time_interval = []
@@ -146,8 +154,8 @@ class Intervals:
 
             if (diff <= interval_size or diff <= ((interval_size * error / 100) + interval_size) * 1.96) and deltaTime.size:
                 interval_values_data_frame = pd.DataFrame(columns=cols)
-                interval_values_depth = np.array(data['Teufe [m]'].values)[start_index:end_index + 1]
-                interval_values_time = np.array(data['Zeit [s]'].values)[start_index:end_index + 1]
+                interval_values_depth = np.array(data.loc[:, teufe_columns[0]].values)[start_index:end_index + 1]
+                interval_values_time = np.array(data.loc[:, zeit_columns[0]].values)[start_index:end_index + 1]
 
                 if i == 0:
                     for col in cols:
@@ -169,14 +177,14 @@ class Intervals:
 
                 else:
                     if i == 0:
-                        if len(interval_values_data_frame['Zeit [s]'].values) >= 3 and len(
-                                interval_values_data_frame['Teufe [m]'].values) >= 3:
-                            if np.all(np.gradient(interval_values_data_frame['Zeit [s]'].values) != 0) and np.all(
-                                    np.gradient(interval_values_data_frame['Teufe [m]'].values) != 0):
+                        if len(interval_values_data_frame.loc[:, zeit_columns[0]].values) >= 3 and len(
+                                interval_values_data_frame.loc[:, teufe_columns[0]].values) >= 3:
+                            if np.all(np.gradient(interval_values_data_frame.loc[:, zeit_columns[0]].values) != 0) and np.all(
+                                    np.gradient(interval_values_data_frame.loc[:, teufe_columns[0]].values) != 0):
 
                                 # Calculate the differences between consecutive values
-                                time_diff = np.diff(interval_values_data_frame['Zeit [s]'].values)
-                                depth_diff = np.diff(interval_values_data_frame['Teufe [m]'].values)
+                                time_diff = np.diff(interval_values_data_frame.loc[:, zeit_columns[0]].values)
+                                depth_diff = np.diff(interval_values_data_frame.loc[:, teufe_columns[0]].values)
 
                                 # Calculate the mean and standard deviation of the differences
                                 time_mean = time_diff.mean()
@@ -218,14 +226,14 @@ class Intervals:
                                     statistical_df.loc[i, std_col_label] = np.std(feature)
 
                     elif 0 < i <= interval_count:
-                        if len(interval_values_data_frame[f'Teufe [m]_{i}'].values) >= 3 and len(
-                                interval_values_data_frame[f'Zeit [s]_{i}'].values) >= 3:
+                        if len(interval_values_data_frame[f'{teufe_columns[0]}_{i}'].values) >= 3 and len(
+                                interval_values_data_frame[f'{zeit_columns[0]}_{i}'].values) >= 3:
                             if np.all(np.gradient(
-                                    interval_values_data_frame[f'Zeit [s]_{i}'].values) != 0) and np.all(np.gradient(interval_values_data_frame[f'Teufe [m]_{i}'].values) != 0):
+                                    interval_values_data_frame[f'{zeit_columns[0]}_{i}'].values) != 0) and np.all(np.gradient(interval_values_data_frame[f'{teufe_columns[0]}_{i}'].values) != 0):
 
                                 # Calculate the differences between consecutive values
-                                time_diff = np.diff(interval_values_data_frame[f'Zeit [s]_{i}'].values)
-                                depth_diff = np.diff(interval_values_data_frame[f'Teufe [m]_{i}'])
+                                time_diff = np.diff(interval_values_data_frame[f'{zeit_columns[0]}_{i}'].values)
+                                depth_diff = np.diff(interval_values_data_frame[f'{teufe_columns[0]}_{i}'])
 
                                 # Calculate the mean and standard deviation of the differences
                                 time_mean = time_diff.mean()
@@ -275,9 +283,10 @@ class Intervals:
     def Formations(data_set, depth_intervals, formations, data_type):
         # Create a list to store the formations for each interval
         interval_formations = []
+        teufe_column = [col for col in data_set.columns if col.strip().lower().startswith('teufe')]
 
         if data_type == 'prior data':
-            for depth in data_set.loc[:, 'Teufe [m]']:
+            for depth in data_set.loc[:, teufe_column[0]]:
                 assigned_formation = None
 
                 # Check if the depth falls within any interval
@@ -291,7 +300,7 @@ class Intervals:
             data_set.loc[:, 'Formation'] = interval_formations
 
         elif data_type == 'stats data':
-            for depth in data_set.loc[:, 'Teufe [m] Mean']:
+            for depth in data_set.loc[:, teufe_column[0]]:
                 assigned_formation = None
 
                 # Check if the depth falls within any interval
@@ -357,7 +366,7 @@ def add_logo():
 
 def DI(dataframe):
     import math
-    
+
     dataframe.loc[:, 'Andruck [kPa]'] = dataframe.loc[:, 'Andruck [bar]'] * 100
     dataframe.loc[:, 'Pseudo Gravitational Force [kN]'] = dataframe.loc[:, 'Andruck [kPa]'] * math.pi * (0.152**2) / 4
 
@@ -373,19 +382,78 @@ def DI(dataframe):
         drillibility.append(di)
 
     dataframe.loc[:, 'Pseudo Drillibility Index [kN/mm]'] = drillibility
+    
 
     return dataframe
 
 
-def pipe(interval_df, W):
+def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
     interval_df_copy = interval_df.copy()
 
-    for i in range(len(interval_df_copy)):
-        if i == 0:
-            interval_df_copy.loc[i, 'Pipe Section Weight [kg]'] = W
+    if Wp is not None and Wh is not None and Wb is not None and Axial is not None:
+        for i in range(len(interval_df_copy)):
+            if i == 0:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wh + Wb + (Axial[i] * 1000)
+            
+            else:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + Axial[i]
         
-        else:
-            interval_df_copy.loc[i, 'Pipe Section Weight [kg]'] = (i+1) * W
+
+    elif Wp is not None and Wh is None and Wb is not None and Axial is not None:
+        for i in range(len(interval_df_copy)):
+            if i == 0:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wb + (Axial[i] * 1000)
+            
+            else:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
+
+    elif Wp is not None and Wb is None and Wh is not None and Axial is not None:
+        for i in range(len(interval_df_copy)):
+            if i == 0:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wh + (Axial[i] * 1000)
+            
+            else:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
+
+    elif Wp is not None and Wb is None and Wh is None and Axial is not None:
+        for i in range(len(interval_df_copy)):
+            if i == 0:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + (Axial[i] * 1000)
+            
+            else:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
+    
+    elif Wp is not None and Wb is None and Wh is None and Axial is None:
+        for i in range(len(interval_df_copy)):
+            if i == 0:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp 
+            
+            else:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
+
+    elif Wp is not None and Wb is not None and Wh is not None and Axial is None:
+        for i in range(len(interval_df_copy)):
+            if i == 0:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wb + Wh
+            
+            else:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
+    
+    elif Wp is not None and Wb is not None and Wh is None and Axial is None:
+        for i in range(len(interval_df_copy)):
+            if i == 0:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wb 
+            
+            else:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
+        
+    elif Wp is not None and Wb is None and Wh is not None and Axial is None:
+        for i in range(len(interval_df_copy)):
+            if i == 0:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wh
+            
+            else:
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
 
     return interval_df_copy 
     
@@ -399,7 +467,7 @@ def Display():
 
 
 def Control(data, cols, length, error, int_depth=None, rocks=None, number_of_intervals=None):
-    required_columns = ["Zeit [s]", "Delta Zeit [s]", "Teufe [m]", "Delta Teufe [m]", "p Luft [bar]", "DZ [U/min]"]
+    required_columns = ["Zeit [s]", "Delta Zeit [s]", "Teufe [m]", "Delta Teufe [m]", "p Luft [bar]", "DZ [U/min]", "Q Luft [Nm3/min]"]
     flag_control = -3
 
 
@@ -474,6 +542,8 @@ def plot_intervals(interval_depths, interval_times, available_data):
 
 
 def main():
+    import pandas as pd
+    import re
 
     st.markdown(
     """
@@ -533,19 +603,42 @@ def main():
         """, unsafe_allow_html=True)
         
         st.info(
-            'The following columns that are chosen by default, are necessary to select before proceeding the calculations. If these columns are not found, the algorithm will be giving an error.')
+            '**The following columns that are chosen by default, are necessary to select before proceeding the calculations. If these columns are not found, the algorithm will be giving an error.**')
 
         pipe_length = st.number_input('**Drill Pipe Length, in meters**', min_value=1)
         error_rate = st.number_input('**Error Rate, in %**', min_value=0, max_value=100)
         threshold = st.number_input('**Threshold, an integer**', min_value=1, max_value=15)
 
-        pipe_check = st.checkbox('**Do you have pipe weight information?**')
+        pipe_check = st.checkbox('**Do you have the drill pipe weight information?**')
+
+        if 'pipe_info' not in st.session_state:
+            st.session_state.pipe_info = None
 
         if pipe_check:
             pipe_weight = st.number_input('**Please specify the weight of one drill pipe, in kg**', min_value=0)
 
-            if 'pipe_info' not in st.session_state:
-                st.session_state.pipe_info = True
+            st.session_state.pipe_info = True
+            st.session_state.pipe_weight = pipe_weight
+
+        if 'hammer_weight' not in st.session_state:
+            st.session_state.hammer_weight = None
+
+        hammer_check = st.checkbox('**Do you have the hammer weight information?**')
+
+        if hammer_check:
+            hammer_weight = st.number_input('**Please specify the weight of the hammer, in kg**', min_value=0)
+
+            st.session_state.hammer_weight = hammer_weight
+
+        if 'bit_weight' not in st.session_state:
+            st.session_state.bit_weight = None
+
+        bit_check = st.checkbox('**Do you have the bit weight information?**')
+
+        if bit_check:
+            bit_weight = st.number_input('**Please specify the weight of the bit, in kg**', min_value=0)
+
+            st.session_state.bit_weight = bit_weight
 
         check_formation = st.checkbox('**Do you have formation informations?**')
 
@@ -596,10 +689,18 @@ def main():
             if 'water_info' not in st.session_state:
                 st.session_state.water_info = False
 
+        columns_used = []
+
+        for col in st.session_state.dropped_data.columns:
+            match = re.match(r'^(p Luft|DZ|Q Luft|Zeit|Delta Zeit|Teufe|Delta Teufe|vB|Andruck|Drehdruck|WOB)', col, re.IGNORECASE)
+
+            if match:
+                columns_used.append(col)
+
         columns = st.multiselect(
             label='**Columns to be used**',
             options=st.session_state.dropped_data.columns,
-            default=['Zeit [s]', 'Delta Zeit [s]', 'Teufe [m]', 'Delta Teufe [m]', 'vB [m/h]', 'DZ [U/min]', 'Andruck [bar]', 'Drehdruck [bar]', 'p Luft [bar]', 'Q Luft [Nm3/min]'],
+            default=columns_used,
             disabled=True
         )
 
@@ -640,6 +741,12 @@ def main():
 
                 stats_data = \
                     Intervals.CalculateIntervals(st.session_state.prior_data, columns, pipe_length, error_rate)[0]
+                
+                if 'axial_force' not in st.session_state:
+                    st.session_state.axial_force = None
+                
+                if 'WOB [t] Mean' in stats_data.columns:
+                    st.session_state.axial_force = stats_data.loc[:, 'WOB [t] Mean']
 
                 if 'stats_data' not in st.session_state:
                     st.session_state.stats_data = stats_data
@@ -654,79 +761,110 @@ def main():
                 st.table(data=st.session_state.prior_data.describe())
                 st.divider()
 
-                if st.session_state.formation_info is not None:
+                if 'prior_data_rocks' not in st.session_state:
+                    st.session_state.prior_data_rocks = None
 
+                if 'stats_data_rocks' not in st.session_state:
+                    st.session_state.stats_data_rocks = None
+
+                if st.session_state.formation_info is not None and st.session_state.pipe_info:
                     if st.session_state.formation_info:
                         prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
                         stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
 
                         if st.session_state.pipe_info:
-                            stats_data_rocks = pipe(stats_data_rocks, pipe_weight)
+                            stats_data_rocks = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)
 
-                    if not st.session_state.formation_info:
-                        prior_data_rocks = st.session_state.prior_data
-                        stats_data_rocks = st.session_state.stats_data
-
-                        if st.session_state.pipe_info:
-                            stats_data_rocks = pipe(stats_data_rocks, pipe_weight)
-
-                if not prior_data_rocks.empty and not stats_data_rocks.empty:
-                    if 'prior_data_rocks' not in st.session_state:
+                            st.session_state.stats_data_rocks = stats_data_rocks
+                        
                         st.session_state.prior_data_rocks = prior_data_rocks
-    
-                    if 'stats_data_rocks' not in st.session_state:
+
+                elif st.session_state.formation_info is None:
+                    prior_data_rocks = st.session_state.prior_data
+                    stats_data_rocks = st.session_state.stats_data
+
+                    if st.session_state.pipe_info:
+                        stats_data_rocks = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)
+
                         st.session_state.stats_data_rocks = stats_data_rocks
-    
-                    st.markdown(f"""
-                    <div class='stHeader'><i>{file_name_without_extension}</i> Intervals Data</div>
-                    """, unsafe_allow_html=True)
-
-                    if 'DZ [U/min] Mean' in columns and 'Andruck [bar] Mean' in columns and 'vB [m/h] Mean' in columns:
-                        st.session_state.stats_data_rocks = DI(st.session_state.stats_data_rocks)
-
-                    st.table(data=st.session_state.stats_data_rocks)
-                    st.caption(f'**Calculated Number of Intervals:** {counted_interval}')
-                    st.caption(f'**Number of Intervals in Dataset:** {intervals}')
-    
-                    display_chart = True
-                    st.markdown(f"""
-                    <div class='stHeader'>Download the Resulted Datasets for <i>{file_name_without_extension}</i></div>
-                    """, unsafe_allow_html=True)
-                    col1, col2 = st.columns(2, gap='large')
-
-                    prior_data_rocks_excel = Excel(st.session_state.prior_data_rocks, 'Prior Data')
-                    stats_data_rocks_excel = Excel(st.session_state.stats_data_rocks, 'Interval Data')
-
-                    with col1:
-                        st.download_button(label='Download Prior Data',
-                                          data=prior_data_rocks_excel,
-                                          file_name='Prior_data.xlsx')
-
-                    with col2:
-                        st.download_button(label='Download Interval Data',
-                                          data=stats_data_rocks_excel,
-                                          file_name='Interval_data.xlsx')
                     
-                else:
-                    st.error('According to the algorithm, the dataset is found to be not convenient.', icon='🛑')
+                    st.session_state.prior_data_rocks = prior_data_rocks
+                    
+                elif st.session_state.pipe_info is None:
+                    if st.session_state.formation_info:
+                        prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
+                        stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
+
+                        st.session_state.prior_data_rocks = prior_data_rocks         
+                        st.session_state.stats_data_rocks = stats_data_rocks
+                            
+                elif st.session_state.formation_info is None and st.session_state.pipe_info is None:
+                    prior_data_rocks = st.session_state.prior_data
+                    stats_data_rocks = st.session_state.stats_data
+                    
+                    st.session_state.prior_data_rocks = prior_data_rocks
+                    st.session_state.stats_data_rocks = stats_data_rocks
+                
+                if st.session_state.prior_data_rocks is not None and st.session_state.stats_data_rocks is not None:
+                    if not st.session_state.prior_data_rocks.empty and not st.session_state.stats_data_rocks.empty:
+                        st.markdown(f"""
+                        <div class='stHeader'><i>{file_name_without_extension}</i> Intervals Data</div>
+                        """, unsafe_allow_html=True)
+
+                        unit_check = False
+
+                        if 'DZ [U/min] Mean' in columns and 'Andruck [bar] Mean' in columns and 'vB [m/h] Mean' in columns:
+                            if isinstance(DI(st.session_state.stats_data_rocks), pd.DataFrame):
+                                st.session_state.stats_data_rocks = DI(st.session_state.stats_data_rocks)
+
+                            elif DI(st.session_state.stats_data_rocks) is None:
+                                st.error('**Please make sure that your units are in SI System. Please go back to the first part, and upload a new data set with the consistent units!**', icon='🛑')
+                                unit_check = True
+                            
+                        if not unit_check:
+                            st.table(data=st.session_state.stats_data_rocks)
+                            st.caption(f'**Calculated Number of Intervals:** {counted_interval}')
+                            st.caption(f'**Number of Intervals in Dataset:** {intervals}')
+            
+                            display_chart = True
+                            st.markdown(f"""
+                            <div class='stHeader'>Download the Resulted Datasets for <i>{file_name_without_extension}</i></div>
+                            """, unsafe_allow_html=True)
+                            col1, col2 = st.columns(2, gap='large')
+
+                            prior_data_rocks_excel = Excel(st.session_state.prior_data_rocks, 'Prior Data')
+                            stats_data_rocks_excel = Excel(st.session_state.stats_data_rocks, 'Interval Data')
+
+                            with col1:
+                                st.download_button(label='Download Prior Data',
+                                                data=prior_data_rocks_excel,
+                                                file_name='Prior_data.xlsx')
+
+                            with col2:
+                                st.download_button(label='Download Interval Data',
+                                                data=stats_data_rocks_excel,
+                                                file_name='Interval_data.xlsx')
+                        
+                    else:
+                        st.error('**According to the algorithm, the dataset is found to be not convenient.**', icon='🛑')
 
             elif st.session_state.flag == 0:
-                st.warning('Please do not forget to select the following columns: *Zeit*, *Teufe*, *Delta Zeit*, *p Luft*, *DZ*', icon='💹')
+                st.error('**Please make sure that your dataset features are in SI unit system!**', icon='🛑')
 
             elif st.session_state.flag == -1:
-                st.warning('Number of formation intervals cannot be less than 1!', icon='💹')
+                st.warning('**Number of formation intervals cannot be less than 1!**', icon='💹')
             elif st.session_state.flag == -2:
                 st.warning(
-                    "The following interval's start measurement cannot be less than previous formation's end boundary!",
+                    "**The following interval's start measurement cannot be less than previous formation's end boundary!**",
                     icon='💹')
             elif st.session_state.flag == -3:
-                st.warning('Please fill the above entries to proceed into calculations!', icon='💹')
+                st.error('**Please make sure that your dataset features are in SI unit system!**', icon='🛑')
             else:
-                st.error('Something went wrong!')
+                st.error('**Something went wrong!**')
 
 
         else:
-            st.warning('Please press Start button to proceed!', icon='💹')
+            st.warning('**Please press Start button to proceed!**', icon='💹')
 
         if display_chart:
             with st.form('Chart'):
