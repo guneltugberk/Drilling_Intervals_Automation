@@ -389,6 +389,7 @@ def DI(dataframe):
 
 def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
     interval_df_copy = interval_df.copy()
+    all_params = 0
 
     if Wp is not None and Wh is not None and Wb is not None and Axial is not None:
         for i in range(len(interval_df_copy)):
@@ -398,6 +399,7 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
             else:
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + Axial[i]
         
+        all_params = 1
 
     elif Wp is not None and Wh is None and Wb is not None and Axial is not None:
         for i in range(len(interval_df_copy)):
@@ -455,8 +457,26 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
             else:
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
 
-    return interval_df_copy 
-    
+    return interval_df_copy, all_params
+
+
+def MSE(dataframe, d):
+    import math
+
+    diameter = 0.0393700787 * d
+
+    for i in range(len(dataframe)):
+        wob = dataframe.loc[i, 'Section WOB [kg]'] * 2.222
+        N = dataframe.loc[i, 'DZ [U/min] Mean']
+        T = dataframe.loc[i, 'DM [Nm] Mean'] * 0.737463126
+        ROP = dataframe.loc[i, 'vB [m/h] Mean'] * 3.2808399
+
+        mse = ((4 * wob) / (math.pi * diameter**2)) + ((8 * N * T) / (diameter**2 * ROP))
+        mse = mse * 0.0689475729
+
+        dataframe.loc[i, 'MSE [bar]'] = round(mse, 3)
+
+    return dataframe
 
 def Start():
     st.session_state.start = True
@@ -543,6 +563,7 @@ def plot_intervals(interval_depths, interval_times, available_data):
 
 def main():
     import pandas as pd
+    import numpy as np
     import re
 
     st.markdown(
@@ -605,9 +626,9 @@ def main():
         st.info(
             '**The following columns that are chosen by default, are necessary to select before proceeding the calculations. If these columns are not found, the algorithm will be giving an error.**')
 
-        pipe_length = st.number_input('**Drill Pipe Length, in meters**', min_value=1)
-        error_rate = st.number_input('**Error Rate, in %**', min_value=0, max_value=100)
-        threshold = st.number_input('**Threshold, an integer**', min_value=1, max_value=15)
+        pipe_length = st.number_input('**Drill Pipe Length, in meters**', min_value=1.0, step=0.01)
+        error_rate = st.number_input('**Error Rate, in %**', min_value=0.0, max_value=100.0, step=0.01)
+        threshold = st.number_input('**Threshold, an integer**', min_value=1.0, max_value=15.0, step=1.0)
 
         pipe_check = st.checkbox('**Do you have the drill pipe weight information?**')
 
@@ -615,7 +636,7 @@ def main():
             st.session_state.pipe_info = None
 
         if pipe_check:
-            pipe_weight = st.number_input('**Please specify the weight of one drill pipe, in kg**', min_value=0)
+            pipe_weight = st.number_input('**Please specify the weight of one drill pipe, in kg**', min_value=0.0, step=0.01)
 
             st.session_state.pipe_info = True
             st.session_state.pipe_weight = pipe_weight
@@ -626,19 +647,24 @@ def main():
         hammer_check = st.checkbox('**Do you have the hammer weight information?**')
 
         if hammer_check:
-            hammer_weight = st.number_input('**Please specify the weight of the hammer, in kg**', min_value=0)
+            hammer_weight = st.number_input('**Please specify the weight of the hammer, in kg**', min_value=0.0, step=0.01)
 
             st.session_state.hammer_weight = hammer_weight
 
         if 'bit_weight' not in st.session_state:
             st.session_state.bit_weight = None
+        
+        if 'bit_diameter' not in st.session_state:
+            st.session_state.bit_diameter = None
 
-        bit_check = st.checkbox('**Do you have the bit weight information?**')
+        bit_check = st.checkbox('**Do you have the bit informations?**')
 
         if bit_check:
-            bit_weight = st.number_input('**Please specify the weight of the bit, in kg**', min_value=0)
+            bit_weight = st.number_input('**Please specify the weight of the bit, in kg**', min_value=0.0, step=0.01)
+            bit_diameter = st.number_input('**Please specify the diameter of the bit, in mm**', min_value=0.0, step=0.01)
 
             st.session_state.bit_weight = bit_weight
+            st.session_state.bit_diameter = bit_diameter
 
         check_formation = st.checkbox('**Do you have formation informations?**')
 
@@ -692,7 +718,7 @@ def main():
         columns_used = []
 
         for col in st.session_state.dropped_data.columns:
-            match = re.match(r'^(p Luft|DZ|Q Luft|Zeit|Delta Zeit|Teufe|Delta Teufe|vB|Andruck|Drehdruck|WOB)', col, re.IGNORECASE)
+            match = re.match(r'^(p Luft|DZ|Q Luft|Zeit|Delta Zeit|Teufe|Delta Teufe|vB|Andruck|Drehdruck|WOB|DM)', col, re.IGNORECASE)
 
             if match:
                 columns_used.append(col)
@@ -748,6 +774,12 @@ def main():
                 if 'WOB [t] Mean' in stats_data.columns:
                     st.session_state.axial_force = stats_data.loc[:, 'WOB [t] Mean']
 
+                if 'torque' not in st.session_state:
+                    st.session_state.torque = None
+
+                if 'DM [Nm] Mean' in stats_data.columns:
+                    st.session_state.torque = stats_data.loc[:, 'DM [Nm] Mean'].values
+
                 if 'stats_data' not in st.session_state:
                     st.session_state.stats_data = stats_data
 
@@ -773,7 +805,11 @@ def main():
                         stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
 
                         if st.session_state.pipe_info:
-                            stats_data_rocks = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)
+                            stats_data_rocks = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[0]
+                            param_check = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[1]
+
+                            if param_check == 1 and isinstance(st.session_state.torque, np.ndarray):
+                                stats_data_rocks = MSE(stats_data_rocks, bit_diameter)
 
                             st.session_state.stats_data_rocks = stats_data_rocks
                         
@@ -784,7 +820,11 @@ def main():
                     stats_data_rocks = st.session_state.stats_data
 
                     if st.session_state.pipe_info:
-                        stats_data_rocks = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)
+                        stats_data_rocks = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[0]
+                        param_check = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[1]
+
+                        if param_check == 1 and isinstance(st.session_state.torque, np.ndarray):
+                            stats_data_rocks = MSE(stats_data_rocks, bit_diameter)
 
                         st.session_state.stats_data_rocks = stats_data_rocks
                     

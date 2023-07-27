@@ -309,7 +309,7 @@ def main():
                 selected_columns_x = st.selectbox("**Select x-axis**", st.session_state.stats_data_rocks.columns)
                 selected_columns_y = st.selectbox("**Select y-axis**", st.session_state.stats_data_rocks.columns)
 
-                if selected_columns_y == 'Teufe [m] Mean':
+                if selected_columns_y == 'Teufe [m] Mean' or selected_columns_x == 'MSE [bar]':
                     is_linear = st.checkbox('**Would you like to add a linear fit?**')
 
                 else:

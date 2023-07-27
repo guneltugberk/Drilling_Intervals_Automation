@@ -154,11 +154,11 @@ def main():
     st.info("**Uploaded dataset's feature must be in the SI unit system. Furthermore, the structure of the dataset must be as follows:**")
 
     data = [['[s]', '[s]', '[m]', '[m]', '[m/h]', '[rad]', '[U/min]',
-             '[bar]', '[bar]', '[bar]', '[Nm3/min]'], ['Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation',
-             'Observation', 'Observation', 'Observation', 'Observation']]
+             '[bar]', '[bar]', '[bar]', '[Nm3/min]', '[Nm]', '[t]'], ['Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation',
+             'Observation', 'Observation', 'Observation', 'Observation', 'Observation', 'Observation']]
 
     columns = ['Zeit', 'Delta Zeit', 'Teufe', 'Delta Teufe', 'vB', 'RotWinkel', 'DZ', 'Andruck', 'Drehdruck', 'p Luft',
-               'Q Luft']
+               'Q Luft', 'DM', 'WOB']
 
     sample = pd.DataFrame(data, columns=columns)
     st.table(data=sample)
@@ -299,14 +299,15 @@ def main():
 
                         confirmation = st.form_submit_button('Confirm Choice', type='primary')
 
+                        if 'dropped_data' not in st.session_state:
+                            st.session_state.dropped_data = None
+
                         if confirmation:
                             if option == 'Drop NaN':
                                 dropped_data = dropNaN(st.session_state.processed_data)
+                                st.session_state.dropped_data = dropped_data
 
-                                if 'dropped_data' not in st.session_state:
-                                    st.session_state.dropped_data = dropped_data
-
-                                if st.session_state.dropped_data is not None:
+                                if st.session_state.dropped_data is not None and isinstance(st.session_state.dropped_data, pd.DataFrame):
                                     st.success('**All missing values are dropped!**', icon="✅")
 
                                     st.markdown("""
@@ -331,8 +332,7 @@ def main():
                 else:
                     dropped_data = st.session_state.processed_data
 
-                    if 'dropped_data' not in st.session_state:
-                        st.session_state.dropped_data = dropped_data
+                    st.session_state.dropped_data = dropped_data
                         
                     st.info('**There are no missing values to handle.**', icon='💹')
 
