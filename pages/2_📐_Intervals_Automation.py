@@ -397,8 +397,8 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wh + Wb + (Axial[i] * 1000)
             
             else:
-                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + Axial[i]
-        
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
+
         all_params = 1
 
     elif Wp is not None and Wh is None and Wb is not None and Axial is not None:
@@ -416,6 +416,7 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
             
             else:
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
+            
 
     elif Wp is not None and Wb is None and Wh is None and Axial is not None:
         for i in range(len(interval_df_copy)):
@@ -424,6 +425,7 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
             
             else:
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
+
     
     elif Wp is not None and Wb is None and Wh is None and Axial is None:
         for i in range(len(interval_df_copy)):
@@ -633,7 +635,7 @@ def main():
         pipe_check = st.checkbox('**Do you have the drill pipe weight information?**')
 
         if 'pipe_info' not in st.session_state:
-            st.session_state.pipe_info = None
+            st.session_state.pipe_info = False
 
         if pipe_check:
             pipe_weight = st.number_input('**Please specify the weight of one drill pipe, in kg**', min_value=0.0, step=0.01)
@@ -672,7 +674,7 @@ def main():
         formations = []
         
         if 'formation_info' not in st.session_state:
-            st.session_state.formation_info = None
+            st.session_state.formation_info = False
 
         if check_formation:
             st.markdown(f"""
@@ -701,19 +703,21 @@ def main():
 
         
         check_water = st.checkbox('**Do you have formartion water information?**')
+        
+        if 'water_info' not in st.session_state:
+            st.session_state.water_info = False
+
+        if 'formation_water' not in st.session_state:
+            st.session_state.formation_water = None
 
         if check_water:
-            formation_water = st.number_input('**Encountered Formation Water Depth, in m**', min_value=0)
+            formation_water = st.number_input('**Encountered Formation Water Depth, in m**', min_value=0.0, value=0.0, step=0.01)
+            st.session_state.formation_water = formation_water
 
-            if 'formation_water' not in st.session_state or st.session_state.formation_water != formation_water:
-                st.session_state.formation_water = formation_water
-
-            if 'water_info' not in st.session_state:
-                st.session_state.water_info = True
+            st.session_state.water_info = True
         
         else:
-            if 'water_info' not in st.session_state:
-                st.session_state.water_info = False
+            st.session_state.water_info = False
 
         columns_used = []
 
@@ -762,11 +766,8 @@ def main():
                 else:
                     prior_data = available_data
 
-                if 'prior_data' not in st.session_state:
-                    st.session_state.prior_data = prior_data
-
                 stats_data = \
-                    Intervals.CalculateIntervals(st.session_state.prior_data, columns, pipe_length, error_rate)[0]
+                    Intervals.CalculateIntervals(prior_data, columns, pipe_length, error_rate)[0]
                 
                 if 'axial_force' not in st.session_state:
                     st.session_state.axial_force = None
@@ -780,17 +781,15 @@ def main():
                 if 'DM [Nm] Mean' in stats_data.columns:
                     st.session_state.torque = stats_data.loc[:, 'DM [Nm] Mean'].values
 
-                if 'stats_data' not in st.session_state:
-                    st.session_state.stats_data = stats_data
 
-                intervals = Intervals.CalculateIntervals(st.session_state.prior_data, columns, pipe_length, error_rate)[1]
-                counted_interval = Intervals.CalculateIntervals(st.session_state.prior_data, columns, pipe_length, error_rate)[2]
+                intervals = Intervals.CalculateIntervals(prior_data, columns, pipe_length, error_rate)[1]
+                counted_interval = Intervals.CalculateIntervals(prior_data, columns, pipe_length, error_rate)[2]
 
                 st.markdown(f"""
                 <div class='stHeader'><i>{file_name_without_extension}</i> After Outlier Removal Statistics</div>
                 """, unsafe_allow_html=True)
                 
-                st.table(data=st.session_state.prior_data.describe())
+                st.table(data=prior_data.describe())
                 st.divider()
 
                 if 'prior_data_rocks' not in st.session_state:
@@ -799,54 +798,37 @@ def main():
                 if 'stats_data_rocks' not in st.session_state:
                     st.session_state.stats_data_rocks = None
 
-                if st.session_state.formation_info is not None and st.session_state.pipe_info:
-                    if st.session_state.formation_info:
-                        prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
-                        stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
+                if st.session_state.formation_info and st.session_state.pipe_info:
+                    
+                    prior_data_rocks = Intervals.Formations(prior_data, depth_intervals, formations, 'prior data')
+                    stats_data_rocks = Intervals.Formations(stats_data, depth_intervals, formations, 'stats data')
 
-                        if st.session_state.pipe_info:
-                            stats_data_rocks = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[0]
-                            param_check = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[1]
-
-                            if param_check == 1 and isinstance(st.session_state.torque, np.ndarray):
-                                stats_data_rocks = MSE(stats_data_rocks, bit_diameter)
-
-                            st.session_state.stats_data_rocks = stats_data_rocks
                         
-                        st.session_state.prior_data_rocks = prior_data_rocks
+                    stats_data_rocks = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[0]
+                    param_check = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[1]
 
-                elif st.session_state.formation_info is None:
-                    prior_data_rocks = st.session_state.prior_data
-                    stats_data_rocks = st.session_state.stats_data
+                    if param_check == 1 and isinstance(st.session_state.torque, np.ndarray):
+                        stats_data_rocks = MSE(stats_data_rocks, bit_diameter)
 
-                    if st.session_state.pipe_info:
-                        stats_data_rocks = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[0]
-                        param_check = WOB(stats_data_rocks, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[1]
+                elif not st.session_state.formation_info and st.session_state.pipe_info:
+                    stats_data_rocks = WOB(stats_data, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[0]
+                    param_check = WOB(stats_data, st.session_state.pipe_weight, st.session_state.hammer_weight, st.session_state.bit_weight, st.session_state.axial_force)[1]
 
-                        if param_check == 1 and isinstance(st.session_state.torque, np.ndarray):
-                            stats_data_rocks = MSE(stats_data_rocks, bit_diameter)
-
-                        st.session_state.stats_data_rocks = stats_data_rocks
+                    if param_check == 1 and isinstance(st.session_state.torque, np.ndarray):
+                        stats_data_rocks = MSE(stats_data_rocks, bit_diameter)
                     
-                    st.session_state.prior_data_rocks = prior_data_rocks
+                    prior_data_rocks = prior_data
                     
-                elif st.session_state.pipe_info is None:
-                    if st.session_state.formation_info:
-                        prior_data_rocks = Intervals.Formations(st.session_state.prior_data, depth_intervals, formations, 'prior data')
-                        stats_data_rocks = Intervals.Formations(st.session_state.stats_data, depth_intervals, formations, 'stats data')
-
-                        st.session_state.prior_data_rocks = prior_data_rocks         
-                        st.session_state.stats_data_rocks = stats_data_rocks
+                elif not st.session_state.pipe_info and st.session_state.formation_info:
+                    prior_data_rocks = Intervals.Formations(prior_data, depth_intervals, formations, 'prior data')
+                    stats_data_rocks = Intervals.Formations(stats_data, depth_intervals, formations, 'stats data')
                             
-                elif st.session_state.formation_info is None and st.session_state.pipe_info is None:
-                    prior_data_rocks = st.session_state.prior_data
-                    stats_data_rocks = st.session_state.stats_data
-                    
-                    st.session_state.prior_data_rocks = prior_data_rocks
-                    st.session_state.stats_data_rocks = stats_data_rocks
+                elif not st.session_state.formation_info and not st.session_state.pipe_info:         
+                    prior_data_rocks = prior_data
+                    stats_data_rocks = stats_data
                 
-                if st.session_state.prior_data_rocks is not None and st.session_state.stats_data_rocks is not None:
-                    if not st.session_state.prior_data_rocks.empty and not st.session_state.stats_data_rocks.empty:
+                if prior_data_rocks is not None and stats_data_rocks is not None:
+                    if not prior_data_rocks.empty and not stats_data_rocks.empty:
                         st.markdown(f"""
                         <div class='stHeader'><i>{file_name_without_extension}</i> Intervals Data</div>
                         """, unsafe_allow_html=True)
@@ -854,15 +836,17 @@ def main():
                         unit_check = False
 
                         if 'DZ [U/min] Mean' in columns and 'Andruck [bar] Mean' in columns and 'vB [m/h] Mean' in columns:
-                            if isinstance(DI(st.session_state.stats_data_rocks), pd.DataFrame):
-                                st.session_state.stats_data_rocks = DI(st.session_state.stats_data_rocks)
+                            if isinstance(DI(stats_data_rocks), pd.DataFrame):
+                                stats_data_rocks = DI(stats_data_rocks)
 
-                            elif DI(st.session_state.stats_data_rocks) is None:
+                            elif DI(stats_data_rocks) is None:
                                 st.error('**Please make sure that your units are in SI System. Please go back to the first part, and upload a new data set with the consistent units!**', icon='🛑')
                                 unit_check = True
                             
                         if not unit_check:
-                            st.table(data=st.session_state.stats_data_rocks)
+                            stats_data_rocks.loc[:, 'Well Name'] = st.session_state.file_name
+                            
+                            st.table(data=stats_data_rocks)
                             st.caption(f'**Calculated Number of Intervals:** {counted_interval}')
                             st.caption(f'**Number of Intervals in Dataset:** {intervals}')
             
@@ -872,18 +856,21 @@ def main():
                             """, unsafe_allow_html=True)
                             col1, col2 = st.columns(2, gap='large')
 
-                            prior_data_rocks_excel = Excel(st.session_state.prior_data_rocks, 'Prior Data')
-                            stats_data_rocks_excel = Excel(st.session_state.stats_data_rocks, 'Interval Data')
+                            prior_data_rocks_excel = Excel(prior_data_rocks, 'Prior Data')
+                            stats_data_rocks_excel = Excel(stats_data_rocks, 'Interval Data')
+
+                            st.session_state.prior_data_rocks = prior_data_rocks
+                            st.session_state.stats_data_rocks = stats_data_rocks
 
                             with col1:
                                 st.download_button(label='Download Prior Data',
                                                 data=prior_data_rocks_excel,
-                                                file_name='Prior_data.xlsx')
+                                                file_name=f'Prior data for {st.session_state.file_name}.xlsx')
 
                             with col2:
                                 st.download_button(label='Download Interval Data',
                                                 data=stats_data_rocks_excel,
-                                                file_name='Interval_data.xlsx')
+                                                file_name=f'Interval data for {st.session_state.file_name}.xlsx')
                         
                     else:
                         st.error('**According to the algorithm, the dataset is found to be not convenient.**', icon='🛑')
@@ -914,10 +901,10 @@ def main():
                 st.form_submit_button('Display Plot', on_click=Display, type='primary')
 
                 if st.session_state.display:
-                    interval_depths, interval_times = Intervals.CalculateIntervals(st.session_state.prior_data,
+                    interval_depths, interval_times = Intervals.CalculateIntervals(st.session_state.prior_data_rocks,
                                                                                    columns, pipe_length, error_rate)[3:5]
 
-                    plot_intervals(interval_depths, interval_times, st.session_state.prior_data)
+                    plot_intervals(interval_depths, interval_times, st.session_state.prior_data_rocks)
 
     else:
         st.warning('**This dataset is empty. Probably something went wrong. Please repeat the calculations.', icon='💹')
