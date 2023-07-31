@@ -35,6 +35,7 @@ class Upload:
         return self.df
 
 
+@st.cache_resource(ttl=3600)
 def add_logo():
     st.markdown(
         """

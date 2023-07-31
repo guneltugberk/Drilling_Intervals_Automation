@@ -1,6 +1,18 @@
+import streamlit as st
+
+st.set_page_config(
+        page_title='Home Page - Drilling Data Automation System',
+        page_icon='⛑',
+        menu_items={
+            'Get help': 'https://www.linkedin.com/in/berat-tu%C4%9Fberk-g%C3%BCnel-928460173/',
+            'About': "# Make sure to *cite* while using!"
+        },
+        layout="wide"
+    )
+
+
+@st.cache_resource(ttl=3600)
 def add_logo():
-    import streamlit as st
-    
     st.markdown(
         """
         <style>
@@ -27,18 +39,7 @@ def add_logo():
 
 
 def main():
-    import streamlit as st
     import time
-
-    st.set_page_config(
-        page_title='Home Page - Drilling Data Automation System',
-        page_icon='⛑',
-        menu_items={
-            'Get help': 'https://www.linkedin.com/in/berat-tu%C4%9Fberk-g%C3%BCnel-928460173/',
-            'About': "# Make sure to *cite* while using!"
-        },
-        layout="wide"
-    )
 
     st.markdown(
         """
