@@ -109,7 +109,7 @@ def Select():
     st.session_state.select = True
 
 
-@st.cache_data(ttl=3600)
+@st.cache_resource(ttl=3600)
 def add_logo():
     st.markdown(
         """

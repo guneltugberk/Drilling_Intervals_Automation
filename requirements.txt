@@ -10,3 +10,4 @@ pyxlsb
 xlsxwriter 
 statsmodels
 scikit-learn
+xgboost

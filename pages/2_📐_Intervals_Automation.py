@@ -291,7 +291,7 @@ class Intervals:
 
                 # Check if the depth falls within any interval
                 for i, interval in enumerate(depth_intervals):
-                    if interval[0] <= depth <= interval[1]:
+                    if interval[0] < depth <= interval[1]:
                         assigned_formation = formations[i]
                         break
 
@@ -305,7 +305,7 @@ class Intervals:
 
                 # Check if the depth falls within any interval
                 for i, interval in enumerate(depth_intervals):
-                    if interval[0] <= depth <= interval[1]:
+                    if interval[0] < depth <= interval[1]:
                         assigned_formation = formations[i]
                         break
 
