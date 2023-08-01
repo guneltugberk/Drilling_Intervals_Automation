@@ -36,8 +36,8 @@ def mlModel(model_data):
     import pandas as pd
     import numpy as np
     from sklearn.model_selection import train_test_split, GridSearchCV
-    from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
-    from sklearn.linear_model import LinearRegression
+    from sklearn.preprocessing import OneHotEncoder, StandardScaler
+    from sklearn.linear_model import LinearRegression, ElasticNet
     from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
     from xgboost import XGBRegressor
     from sklearn.svm import SVR
@@ -55,8 +55,7 @@ def mlModel(model_data):
     X_final = np.hstack((X_scaled, X_encoded))
 
     X_train, X_test, y_train, y_test = train_test_split(X_final, y, test_size=0.2, random_state=42)
-    print("x train", X_train)
-    print("y train", y_train)
+
     model_params = [
         {
             'model': LinearRegression(),
@@ -90,6 +89,15 @@ def mlModel(model_data):
                 'n_estimators': [50, 100, 150],
                 'max_depth': [3, 5, 7],
                 'learning_rate': [0.1, 0.01, 0.001]
+            }
+        },
+        {
+        'model': ElasticNet(),
+        'params': {
+            'alpha': [0.01, 0.1, 1.0],
+            'l1_ratio': [0.1, 0.5, 0.9],
+            'fit_intercept': [True, False],
+            'max_iter': [1000, 2000]
             }
         }
     ]
@@ -326,78 +334,126 @@ def main():
 
         if st.session_state.predict:
             if target_depth == depth_intervals[-1][1]:
-                prediction_data = precitionData(pipe_length, target_depth, depth_intervals, formations)
-                st.markdown('                            ')
+                if pipe_length > 0:
+                    if target_depth > 1:
+                        prediction_data = precitionData(pipe_length, target_depth, depth_intervals, formations)
+                        st.markdown('                            ')
 
-                results = mlModel(conact_data)
+                        results = mlModel(conact_data)
 
-                progress_text = "**Operation in progress. Please wait.**"
-                my_bar = st.progress(0, text=progress_text)
+                        progress_text = "**Operation in progress. Please wait.**"
+                        my_bar = st.progress(0, text=progress_text)
 
-                for percent_complete in range(100):
-                    time.sleep(0.1)
-                    my_bar.progress(percent_complete + 1, text=progress_text)
+                        for percent_complete in range(100):
+                            time.sleep(0.1)
+                            my_bar.progress(percent_complete + 1, text=progress_text)
 
-                    if percent_complete + 1 == 100:
-                        my_bar.progress(percent_complete + 1, text='**Prediction has been successful!**')
-                        st.success('**Prediction has been performed!**', icon="✅")
-                        continue
+                            if percent_complete + 1 == 100:
+                                my_bar.progress(percent_complete + 1, text='**Prediction has been successful!**')
+                                st.success('**Prediction has been performed!**', icon="✅")
+                                continue
 
-                    elif percent_complete > 100 or percent_complete < 0:
-                        st.error(st.error('**Something went wrong, try again!**', icon="🚨"))
-                        break
-                
-                
-                st.markdown(f"""
-                    <div class='stHeader'>Machine Learning Model Results</div>
-                    """, 
-                    unsafe_allow_html=True)
-                
-                best_param = results[5]
+                            elif percent_complete > 100 or percent_complete < 0:
+                                st.error(st.error('**Something went wrong, try again!**', icon="🚨"))
+                                break
+                        
+                        
+                        st.markdown(f"""
+                            <div class='stHeader'>Machine Learning Model Results</div>
+                            """, 
+                            unsafe_allow_html=True)
+                        
+                        best_param = results[5]
 
-                if not best_param:
-                    best_param = 'None'
+                        st.markdown('                            ')
+                        st.markdown('                            ')
 
+                        st.markdown("""
+                                    <div class='stHeader'><center>Model Metrics</center>
+                                    """, unsafe_allow_html=True)
+                        
+                        if not best_param:
+                            best_param = 'None'
+
+                            st.markdown(f"""
+                                <center>
+                                    <table class='justify-content-center'>
+                                        <tr>
+                                            <th><center>Best Model</center></th>
+                                            <th><center>MSE</center></th>
+                                            <th><center>RMSE</center></th>
+                                            <th><center>R-Squared</center></th>
+                                            <th><center>Best Parameter</center></th>
+                                        </tr>
+                                        <tr>
+                                            <td><center>{results[1]}</center></td>
+                                            <td><center>{round(results[2], 2)}</center></td>
+                                            <td><center>{round(results[3], 2)}</center></td>
+                                            <td><center>{round(results[4], 2)}</center></td>
+                                            <td><center>{best_param}</center></td>
+                                        </tr>
+                                    </table>
+                                </center>
+                                """, unsafe_allow_html=True)
+
+                        else:
+                            best_param = best_param
+                            
+                            st.markdown(f"""
+                                <center>
+                                    <table class='justify-content-center'>
+                                        <tr>
+                                            <th><center>Best Model</center></th>
+                                            <th><center>MSE</center></th>
+                                            <th><center>RMSE</center></th>
+                                            <th><center>R-Squared</center></th>
+                                        </tr>
+                                        <tr>
+                                            <td><center>{results[1]}</center></td>
+                                            <td><center>{round(results[2], 2)}</center></td>
+                                            <td><center>{round(results[3], 2)}</center></td>
+                                            <td><center>{round(results[4], 2)}</center></td>
+                                        </tr>
+                                    </table>
+                                </center>
+                                """, unsafe_allow_html=True)
+                            
+                            st.markdown('                            ')
+
+                            st.markdown(f"""
+                                <center>
+                                    <table class='justify-content-center'>
+                                        <tr>
+                                            <th><center>Hyperparameter</center></th>
+                                            <th><center>Value</center></th>
+                                        </tr>
+                                        {"".join(f"<tr><td><center>{key}</center></td><td><center>{value}</center></td></tr>" for key, value in best_param.items())}
+                                    </table>
+                                </center>
+                                """, unsafe_allow_html=True)
+                            
+                        st.markdown('                            ')
+                        st.markdown('                            ')
+                        st.markdown('                            ')
+                        st.markdown('                            ')
+                        st.markdown('                            ')
+
+                        st.markdown("""
+                            <div class='stHeader'><center>Model Prediction</center></div>
+                        
+                        """, unsafe_allow_html=True)
+                        
+                        predicted_data = prediction(results[0], prediction_data, results[6], results[7])
+                        st.table(data=predicted_data)
+                    
+                    else:
+                        st.warning("**Please make sure that your target depth is greater than zero.**", icon="✅")
+                    
                 else:
-                    best_param
-                
-                st.markdown('                            ')
-                st.markdown('                            ')
-
-                st.markdown(f"""
-                    <div class='stHeader'><center>Model Metrics</center></div>
-                    <center>
-                        <table class='justify-content-center'>
-                            <tr>
-                                <th><center>Best Model</center></th>
-                                <th><center>MSE</center></th>
-                                <th><center>RMSE</center></th>
-                                <th><center>R-Squared</center></th>
-                                <th><center>Best Parameter</center></th>
-                            </tr>
-                            <tr>
-                                <td><center>{results[1]}</center></td>
-                                <td><center>{round(results[2], 2)}</center></td>
-                                <td><center>{round(results[3], 2)}</center></td>
-                                <td><center>{round(results[4], 2)}</center></td>
-                                <td><center>{best_param}</center></td>
-                            </tr>
-                        </table>
-                    </center>
-                    """, unsafe_allow_html=True)
-                st.markdown('                            ')
-                st.markdown('                            ')
-                st.markdown('                            ')
-                st.markdown('                            ')
-                st.markdown('                            ')
-
-                st.markdown("""
-                    <div class='stHeader'><center>Model Prediction</center></div>
-                
-                """, unsafe_allow_html=True)
-                
-                predicted_data = prediction(results[0], prediction_data, results[6], results[7])
-                st.table(data=predicted_data)
+                    st.warning("**Please make sure that your pipe length is greater than zero.**", icon="✅")
+            
+            else:
+                st.warning("**Please make sure that your last interval depth equals to the target depth.**", icon="✅")
                 
                    
 if __name__ == '__main__':
