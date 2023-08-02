@@ -102,7 +102,24 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
     fig.update_traces(marker=dict(size=8))
     fig.update_layout(height=600, hovermode='closest')
 
-    return st.plotly_chart(fig)
+    return fig
+
+
+@st.cache_resource(ttl=3600)
+def distribution_plot(data, feature, control_formation, formation_option):
+    import plotly.express as px
+    import plotly.graph_objects as go
+
+    if control_formation:
+        if formation_option == 'Include Formations':
+            fig = px.histogram(data, x=feature, color='Formation', marginal='violin')
+            fig.update_layout(title=f'Distribution Plot of {feature}', xaxis_title=feature, yaxis_title='Count')
+
+    else:
+        fig = px.histogram(data, x=feature, marginal='violin')
+        fig.update_layout(title=f'Distribution Plot of {feature}', xaxis_title=feature, yaxis_title='Count')
+
+    return fig
 
 
 def Select():
@@ -195,7 +212,7 @@ def main():
     elif st.session_state.prior_data_rocks is not None and st.session_state.stats_data_rocks is not None and st.session_state.water_info is not None and st.session_state.formation_info is not None:
         # Add a slider to select the visualization type
         visualization_type = st.sidebar.selectbox("**Select Visualization Type**",
-                                                  ['Correlation Matrix Plot', 'Feature Investigation'])
+                                                  ['Correlation Matrix Plot', 'Feature Investigation', 'Distribution Analysis'])
 
         # Add radio buttons to select the data type
         data_type = st.sidebar.radio("**Select Data Type**", ['Use Prior Data', 'Use Stats Data'])
@@ -288,16 +305,17 @@ def main():
                             
                         else:
                             if st.session_state.formation_water:
-                                feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                                fig = feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
                                                         st.session_state.formation_water, st.session_state.prior_data_rocks, is_linear, st.session_state.formation_info, st.session_state.water_info)
-                
+                                st.plotly_chart(fig)
+
                 elif not st.session_state.water_info:
                     display_plot = st.button('Confirm Selection')
 
                     if display_plot:
-                        feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                        fig = feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
                                                             st.session_state.formation_water, st.session_state.prior_data_rocks, is_linear, st.session_state.formation_info, st.session_state.water_info)
-
+                        st.plotly_chart(fig)
 
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Stats Data':
 
@@ -336,15 +354,50 @@ def main():
                             
                         else:
                             if st.session_state.formation_water:
-                                feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                                fig = feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
                                                         st.session_state.formation_water, st.session_state.stats_data_rocks, is_linear, st.session_state.formation_info, st.session_state.water_info)
-                
+                                st.plotly_chart(fig)
+
                 elif not st.session_state.water_info:
                     display_plot = st.button('Confirm Selection')
 
                     if display_plot:
-                        feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
+                        fig = feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option,
                                                             st.session_state.formation_water, st.session_state.stats_data_rocks, is_linear, st.session_state.formation_info, st.session_state.water_info)
+                        
+                        st.plotly_chart(fig)
+
+            elif visualization_type == 'Distribution Analysis' and data_type == 'Use Prior Data':
+                st.markdown(f"""
+                <div class='stHeader'>The Distribution of <i>{st.session_state.file_name}</i></div>
+                """, unsafe_allow_html=True)
+
+                feature_selection = st.selectbox('**Please select a feature**', options=st.session_state.prior_data_rocks.columns)
+
+                if st.session_state.formation_info:
+                    formation_option = st.radio("**Formation Option**", ['Include Formations', 'Exclude Formations'])
+
+                else:
+                    formation_option = None
+
+                display_plot = st.button('Confirm Selection')
+
+                if display_plot:
+                    if 'Formation' in feature_selection:
+                            st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='💹')
+                            
+                    else:
+                        fig = distribution_plot(st.session_state.prior_data_rocks, feature_selection, st.session_state.formation_info, formation_option)
+
+                        st.plotly_chart(fig)
+            
+            elif visualization_type == 'Distribution Analysis' and data_type == 'Use Stats Data':
+                st.markdown(f"""
+                <div class='stHeader'>The Distribution of <i>{st.session_state.file_name}</i></div>
+                """, unsafe_allow_html=True)
+
+                st.warning('**You can not use the interval data to visualize distribution as it contains less amount of data.**', icon='💹')
+
 
 
 if __name__ == '__main__':
