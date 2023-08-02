@@ -7,7 +7,6 @@ st.set_page_config(
             'Get help': 'https://www.linkedin.com/in/berat-tu%C4%9Fberk-g%C3%BCnel-928460173/',
             'About': "# Make sure to *cite* while using!"
         },
-        layout="wide"
     )
 
 
@@ -71,7 +70,7 @@ def main():
     
     st.markdown(
         """
-        <div class="stTitle">Drilling Data Automation System</div>
+        <div class="stTitle"><center>Drilling Data Automation System</center></div>
         """
         , unsafe_allow_html=True
     )

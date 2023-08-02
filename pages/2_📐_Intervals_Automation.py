@@ -9,26 +9,44 @@ st.set_page_config(
 class Intervals:
     @staticmethod
     @st.cache_resource(ttl=3600)
-    def train_test_split(data, test_size=0.2, random_seed=None):
+    def custom_auc_pr_score(y_true, outlier_scores):
+        from sklearn.metrics import precision_recall_curve, auc
+
+        precision, recall, _ = precision_recall_curve(y_true, outlier_scores)
+        auc_pr = auc(recall, precision)
+
+        return auc_pr
+    
+
+    @staticmethod
+    @st.cache_resource(ttl=3600)
+    def custom_grid_search(X, n_estimators_list, max_samples_list, contamination_list):
+        from sklearn.ensemble import IsolationForest
+        from sklearn.metrics import precision_recall_curve, auc
         import numpy as np
 
-        # Set random seed for reproducibility
-        if random_seed is not None:
-            np.random.seed(random_seed)
+        best_params = None
+        best_score = None
 
-        # Shuffle the data
-        np.random.shuffle(data)
+        for n in n_estimators_list:
+            for s in max_samples_list:
+                for c in contamination_list:
+                    model = IsolationForest(n_estimators=n, max_samples=s, contamination=c)
+                    model.fit(X)
 
-        # Number of elements to include in the test set
-        num_test = int(len(data) * test_size)
+                    outliers = model.predict(X)
 
-        # Use the first 'num_test' elements for the test set
-        test = data[:num_test]
+                    synthetic_labels = np.ones(len(outliers))
+                    synthetic_labels[outliers == -1] = 0
 
-        # Use the rest for the training set
-        train = data[num_test:]
+                    auc_pr = Intervals.custom_auc_pr_score(synthetic_labels, -model.decision_function(X))
 
-        return train, test
+                    if best_score is None or auc_pr > best_score:
+                        best_score = auc_pr
+                        best_params = {'n_estimators': n, 'max_samples': s, 'contamination': c}
+
+        return best_params, best_score
+
 
     @staticmethod
     @st.cache_resource(ttl=3600)
@@ -36,6 +54,8 @@ class Intervals:
         import pandas as pd
         import numpy as np
         from scipy import stats
+        from sklearn.ensemble import IsolationForest
+        from sklearn.metrics import precision_recall_curve, auc
         import re
 
         data_frame = data.copy()
@@ -44,12 +64,15 @@ class Intervals:
         teufe = np.array(data.filter(regex=r'(?i)^Teufe'))
 
         unsatisfied_indexes_teufe = np.where((teufe < 0) | (delta_teufe <= 0.001))[0]
+        custom_outlier = len(unsatisfied_indexes_teufe)
+
         removed_data = data.drop(data.index[unsatisfied_indexes_teufe])
 
         p_luft = np.array(removed_data.filter(regex=r'(?i)^p Luft'))
         
         unsatisfied_indexes_pluft = np.where(p_luft < 2)[0]
         removed_data = removed_data.drop(removed_data.index[unsatisfied_indexes_pluft])
+        custom_outlier = custom_outlier + len(unsatisfied_indexes_pluft)
 
         DZ = np.array(removed_data.filter(regex=r'(?i)^DZ'))
         dz_mean = DZ.mean()
@@ -59,12 +82,14 @@ class Intervals:
         lower = dz_mean - 3 * dz_std
 
         unsatisfied = np.where((DZ > upper) | (DZ < lower))[0]
+        custom_outlier = custom_outlier + len(unsatisfied)
 
         removed_data = removed_data.drop(removed_data.index[unsatisfied])
 
         if isinstance(removed_data, pd.DataFrame):
             # Create a list of the filtered values for each column
             filtered_values_list = []
+            z = None
 
             for col in cols:
                 if re.match(r'^(p Luft|DZ|Q Luft)', col, re.IGNORECASE):
@@ -74,6 +99,12 @@ class Intervals:
                     filtered_desired_values = desired_values[np.abs(z_score_desired_values) < threshold]
 
                     if len(filtered_desired_values) > 0:
+                        if z is None:
+                            z = len(desired_values[np.abs(z_score_desired_values) >= threshold])
+                        else:
+                            if z <  len(desired_values[np.abs(z_score_desired_values) >= threshold]):
+                                z = len(desired_values[np.abs(z_score_desired_values) >= threshold])
+
                         filtered_values_list.append(filtered_desired_values)
 
             min_length_z = min(len(l) for l in filtered_values_list)
@@ -94,7 +125,32 @@ class Intervals:
             data_frame.loc[:, columns_z] = data_frame.loc[:, columns_z].replace(data_z)
             data_frame.reset_index(drop=True, inplace=True)
 
-        return data_frame
+            X = np.array(data_frame.filter(regex=r'(?i)^vB'))
+
+            n_estimators = [50, 100, 200, 300, 400, 500]
+            max_samples = [0.1, 0.2, 0.5, 0.6, 0.7, 0.8]
+            contamination = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25]
+
+            best_params, best_score = Intervals.custom_grid_search(X, n_estimators, max_samples, contamination)
+
+            best_model = IsolationForest(n_estimators=best_params['n_estimators'], max_samples=best_params['max_samples'], contamination=best_params['contamination'])
+            best_model.fit(X)
+
+            outliers = best_model.predict(X)
+            outlier_indices = data_frame.index[outliers == -1]
+            ml_outlier = np.sum(outliers == -1)
+
+            total_outlier = None
+
+            if z is not None:
+                total_outlier = ml_outlier + custom_outlier + z
+            
+            else:
+                total_outlier = ml_outlier + custom_outlier
+
+            cleaned_data = data_frame.drop(outlier_indices)
+
+        return cleaned_data, best_params, best_score, ml_outlier, custom_outlier, z, total_outlier
 
     @staticmethod
     def Energy(data):
@@ -599,10 +655,11 @@ def main():
     add_logo()
     
     st.markdown("""
-    <div class='stTitle'>Drilling Intervals Automation</div>
+    <div class='stTitle'><center>Drilling Intervals Automation</center></div>
     """, unsafe_allow_html=True)
     
-    st.divider()
+    st.markdown('                            ')
+    st.markdown('                            ')
 
     if 'dropped_data' not in st.session_state:
         st.session_state.dropped_data = None  # Initialize the dropped_data attribute
@@ -749,7 +806,8 @@ def main():
                 st.session_state.flag = flag
 
             if st.session_state.flag == 1:
-                available_data = Intervals.outliers(st.session_state.dropped_data, columns, threshold)
+                outlier = Intervals.outliers(st.session_state.dropped_data, columns, threshold)
+                available_data = outlier[0]
 
                 if 'p Luft [bar]' in columns and 'Q Luft [Nm3/min]' in columns:
                     a = Intervals.Energy(available_data)
@@ -784,10 +842,85 @@ def main():
 
                 intervals = Intervals.CalculateIntervals(prior_data, columns, pipe_length, error_rate)[1]
                 counted_interval = Intervals.CalculateIntervals(prior_data, columns, pipe_length, error_rate)[2]
+                st.divider()
+                st.markdown('                            ')
+
+                st.markdown("""
+                            <div class='stHeader'><center>Outlier Detection Model</center>
+                            """, unsafe_allow_html=True)
+                        
 
                 st.markdown(f"""
-                <div class='stHeader'><i>{file_name_without_extension}</i> After Outlier Removal Statistics</div>
-                """, unsafe_allow_html=True)
+                            <center>
+                                <table class='justify-content-center'>
+                                    <tr>
+                                        <th><center>ML Model</center></th>
+                                        <th><center>ML Model Score</center></th>
+                                        <th><center>Custom Model</center></th>
+                                        <th><center>Statistics Model</center></th>
+                                    </tr>
+                                    <tr>
+                                        <td><center>Isolation Forest</center></td>
+                                        <td><center>{outlier[2]}</center></td>
+                                        <td><center>Checkout Article</center></td>
+                                        <td><center>Z-Score</center></td>
+                                    </tr>
+                                </table>
+                            </center>
+                            """, unsafe_allow_html=True)
+                
+                st.markdown('                            ')
+                st.markdown('                            ')
+
+
+                st.markdown("""
+                            <div class='stHeader'><center>Outlier Detection Model Hyperparameters</center>
+                            """, unsafe_allow_html=True)
+                        
+
+                st.markdown(f"""
+                    <center>
+                        <table class='justify-content-center'>
+                            <tr>
+                                <th><center>Hyperparameter</center></th>
+                                <th><center>Value</center></th>
+                            </tr>
+                            {"".join(f"<tr><td><center>{key}</center></td><td><center>{value}</center></td></tr>" for key, value in outlier[1].items())}
+                        </table>
+                    </center>
+                    """, unsafe_allow_html=True)
+                st.markdown('                            ')
+                st.markdown('                            ')
+
+                st.markdown("""
+                            <div class='stHeader'><center>Observed Number of Outliers</center>
+                            """, unsafe_allow_html=True)
+
+                st.markdown(f"""
+                            <center>
+                                <table class='justify-content-center'>
+                                    <tr>
+                                        <th><center>ML Model</center></th>
+                                        <th><center>Custom Model</center></th>
+                                        <th><center>Z-Score</center></th>
+                                        <th><center>Total</center></th>
+                                    </tr>
+                                    <tr>
+                                        <td><center>{outlier[3]}</center></td>
+                                        <td><center>{outlier[4]}</center></td>
+                                        <td><center>{outlier[5]}</center></td>
+                                        <td><center>{outlier[6]}</center></td>
+                                    </tr>
+                                </table>
+                            </center>
+                            """, unsafe_allow_html=True)
+                
+                st.markdown('                            ')
+                st.markdown('                            ')
+                
+                st.markdown(f"""
+                    <div class='stHeader'><center><i>{file_name_without_extension}</i>After Outlier Removal Statistics</center></div>
+                    """, unsafe_allow_html=True)
                 
                 st.table(data=prior_data.describe())
                 st.divider()
@@ -830,7 +963,7 @@ def main():
                 if prior_data_rocks is not None and stats_data_rocks is not None:
                     if not prior_data_rocks.empty and not stats_data_rocks.empty:
                         st.markdown(f"""
-                        <div class='stHeader'><i>{file_name_without_extension}</i> Intervals Data</div>
+                        <div class='stHeader'><center><i>{file_name_without_extension}</i> Intervals Data</center></div>
                         """, unsafe_allow_html=True)
 
                         unit_check = False
@@ -852,7 +985,7 @@ def main():
             
                             display_chart = True
                             st.markdown(f"""
-                            <div class='stHeader'>Download the Resulted Datasets for <i>{file_name_without_extension}</i></div>
+                            <div class='stHeader'><center>Download the Resulted Datasets for <i>{file_name_without_extension}</i></center></div>
                             """, unsafe_allow_html=True)
                             col1, col2 = st.columns(2, gap='large')
 

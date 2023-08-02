@@ -186,9 +186,10 @@ def main():
     add_logo()
 
     st.markdown("""
-    <div class='stTitle'>Visualization</div>
+    <div class='stTitle'><center>Visualization</center></div>
     """, unsafe_allow_html=True)
-    st.divider()
+    st.markdown('                            ')
+    st.markdown('                            ')
     
     if 'stats_data_rocks' not in st.session_state:
         st.session_state.stats_data_rocks = None
@@ -226,7 +227,7 @@ def main():
             # Perform actions based on the selected options
             if visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Prior Data':
                 st.markdown(f"""
-                <div class='stHeader'>The Correlation Matrix Plot with Prior Data of <i>{st.session_state.file_name}</i></div>
+                <div class='stHeader'><center>The Correlation Matrix Plot with Prior Data of <i>{st.session_state.file_name}</i></center></div>
                 """, unsafe_allow_html=True)
 
                 if st.session_state.formation_info:
@@ -248,7 +249,7 @@ def main():
 
             elif visualization_type == 'Correlation Matrix Plot' and data_type == 'Use Stats Data':
                 st.markdown(f"""
-                <div class='stHeader'>The Correlation Matrix Plot with Stats Data of <i>{st.session_state.file_name}</i></div>
+                <div class='stHeader'><center>The Correlation Matrix Plot with Stats Data of <i>{st.session_state.file_name}</i></center></div>
                 """, unsafe_allow_html=True)
                 
                 if st.session_state.formation_info:
@@ -271,7 +272,7 @@ def main():
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Prior Data':
 
                 st.markdown(f"""
-                <div class='stHeader'>The Feature Investigation with Prior Data <i>{st.session_state.file_name}</i></div>
+                <div class='stHeader'><center>The Feature Investigation with Prior Data <i>{st.session_state.file_name}</i></center></div>
                 """, unsafe_allow_html=True)
                 st.info('X-axis and y-axis entry arguments accept only one feature at a time.')
 
@@ -320,7 +321,7 @@ def main():
             elif visualization_type == 'Feature Investigation' and data_type == 'Use Stats Data':
 
                 st.markdown(f"""
-                <div class='stHeader'>The Feature Investigation with Stats Data of <i>{st.session_state.file_name}</i></div>
+                <div class='stHeader'><center>The Feature Investigation with Stats Data of <i>{st.session_state.file_name}</i></center></div>
                 """, unsafe_allow_html=True)
                 st.info('X-axis and y-axis entry arguments accept only one feature at a time.')
 
@@ -369,7 +370,7 @@ def main():
 
             elif visualization_type == 'Distribution Analysis' and data_type == 'Use Prior Data':
                 st.markdown(f"""
-                <div class='stHeader'>The Distribution of <i>{st.session_state.file_name}</i></div>
+                <div class='stHeader'><center>The Distribution of <i>{st.session_state.file_name}</i></center></div>
                 """, unsafe_allow_html=True)
 
                 feature_selection = st.selectbox('**Please select a feature**', options=st.session_state.prior_data_rocks.columns)
@@ -392,10 +393,6 @@ def main():
                         st.plotly_chart(fig)
             
             elif visualization_type == 'Distribution Analysis' and data_type == 'Use Stats Data':
-                st.markdown(f"""
-                <div class='stHeader'>The Distribution of <i>{st.session_state.file_name}</i></div>
-                """, unsafe_allow_html=True)
-
                 st.warning('**You can not use the interval data to visualize distribution as it contains less amount of data.**', icon='💹')
 
 

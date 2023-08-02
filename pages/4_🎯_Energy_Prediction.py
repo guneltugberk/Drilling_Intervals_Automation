@@ -235,7 +235,7 @@ def main():
     add_logo()
 
     st.markdown("""
-        <div class='stTitle'>Energy Prediction</div>
+        <div class='stTitle'><center>Energy Prediction</center></div>
     """, unsafe_allow_html=True)
 
     st.markdown("""
