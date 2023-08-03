@@ -12,6 +12,7 @@ class Upload:
         self.sheet_name = sheet_name
         self.data_source = data_source
 
+    @st.cache_data(ttl=3600)
     def read_file(self):
         import pandas as pd
         import streamlit as st
@@ -35,7 +36,6 @@ class Upload:
         return self.df
 
 
-@st.cache_resource(ttl=3600)
 def add_logo():
     st.markdown(
         """

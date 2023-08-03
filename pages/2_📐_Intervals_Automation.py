@@ -393,7 +393,6 @@ def Excel(df, sheet):
     return processed_data
 
 
-@st.cache_resource(ttl=3600)
 def add_logo():
     st.markdown(
         """
@@ -443,6 +442,7 @@ def DI(dataframe):
     return dataframe
 
 
+@st.cache_resource(ttl=3600)
 def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
     interval_df_copy = interval_df.copy()
     all_params = 0
@@ -575,7 +575,6 @@ def Control(data, cols, length, error, int_depth=None, rocks=None, number_of_int
     return flag_control
 
 
-@st.cache_resource(ttl=3600)
 def plot_intervals(interval_depths, interval_times, available_data):
     import plotly.graph_objects as go
     import numpy as np

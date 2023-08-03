@@ -10,7 +10,6 @@ st.set_page_config(
     )
 
 
-@st.cache_resource(ttl=3600)
 def add_logo():
     st.markdown(
         """

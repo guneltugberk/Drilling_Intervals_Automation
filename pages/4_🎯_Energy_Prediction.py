@@ -6,7 +6,7 @@ st.set_page_config(
     )
 
 
-@st.cache_resource(ttl=3600)
+@st.cache_data(ttl=3600)
 def precitionData(length, target, depth_intervals, formations):
     import pandas as pd
     import numpy as np
@@ -66,14 +66,6 @@ def mlModel(model_data):
             'params': {
                 'n_estimators': [50, 100, 150],
                 'max_depth': [None, 5, 10, 15]
-            }
-        },
-        {
-            'model': XGBRegressor(),
-            'params': {
-                'n_estimators': [50, 100, 150],
-                'max_depth': [3, 5, 7],
-                'learning_rate': [0.1, 0.01, 0.001]
             }
         },
         {
@@ -165,7 +157,7 @@ def prediction(_best_model, dataset, _onehot_encoder, _scaler):
 
     return df
 
-@st.cache_resource(ttl=3600)
+
 def add_logo():
     st.markdown(
         """

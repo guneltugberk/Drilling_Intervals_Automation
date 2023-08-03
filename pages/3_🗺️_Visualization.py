@@ -30,7 +30,6 @@ def correlation_correction(copy_df):
     return df, df_numeric
 
 
-@st.cache_resource(ttl=3600)
 def correlation_matrix_plot(data_plot):
     import plotly.express as px
 
@@ -46,7 +45,6 @@ def correlation_matrix_plot(data_plot):
     return fig
 
 
-@st.cache_resource(ttl=3600)
 def feature_investigation_plot(selected_columns_x, selected_columns_y, formation_option, water_depth, data_feature, add_linear_curve, control_formation, control_water):
     import plotly.express as px
     import plotly.graph_objects as go
@@ -105,7 +103,6 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
     return fig
 
 
-@st.cache_resource(ttl=3600)
 def distribution_plot(data, feature, control_formation, formation_option):
     import plotly.express as px
     import plotly.graph_objects as go
@@ -126,7 +123,6 @@ def Select():
     st.session_state.select = True
 
 
-@st.cache_resource(ttl=3600)
 def add_logo():
     st.markdown(
         """
