@@ -127,11 +127,11 @@ def mlModel(model_data):
         rmse = np.sqrt(mse)
         r_squared = r2_score(y_test, y_pred)
 
-    return best_model, best_model.__class__.__name__, mse, rmse, r_squared, best_params, onehot_encoder, scaler
+    return best_model, best_model.__class__.__name__, mse, rmse, r_squared, best_params, onehot_encoder, scaler, X_test, y_test
 
 
 @st.cache_resource(ttl=3600)
-def prediction(_best_model, dataset, _onehot_encoder, _scaler):
+def prediction(_best_model, dataset, _onehot_encoder, _scaler, num_bootstraps=100):
     import numpy as np
     import pandas as pd
 
@@ -144,14 +144,33 @@ def prediction(_best_model, dataset, _onehot_encoder, _scaler):
 
     predicted_mse = _best_model.predict(input_data_final)
 
+    predicted_mse_bootstraps = []
+
+    for _ in range(num_bootstraps):
+        # Resample input data
+        resampled_indices = np.random.choice(len(input_data_final), size=len(input_data_final), replace=True)
+        resampled_input_data = input_data_final[resampled_indices]
+
+        # Predict MSE for resampled data
+        bootstraps_mse = _best_model.predict(resampled_input_data)
+        predicted_mse_bootstraps.append(bootstraps_mse)
+    
+    mse_mean = np.mean(predicted_mse_bootstraps, axis=0)
+    mse_std = np.std(predicted_mse_bootstraps, axis=0)
+    lower_bound = mse_mean - 1.96 * mse_std
+    upper_bound = mse_mean + 1.96 * mse_std
+
     data = []
-    for depth, formation, mse in zip(input_depth, input_formation, predicted_mse):
+    for depth, formation, mean_mse, lb, ub in zip(input_depth, input_formation, predicted_mse, lower_bound, upper_bound):
         for d, f in zip(depth, formation):
             data.append({
                 "Depth [m]": d,
                 "Probable Formation": f,
-                "Predicted MSE [bar]": round(mse, 2)
+                "Predicted Mean MSE [bar]": round(mean_mse, 2),
+                "Lower Bound [bar]": round(lb, 2),
+                "Upper Bound [bar]": round(ub, 2)
             })
+
 
     df = pd.DataFrame(data)
 
@@ -194,6 +213,8 @@ def main():
     import pandas as pd
     import numpy as np
     import time
+    import plotly.graph_objects as go
+    import seaborn as sns
 
     st.markdown(
     """
@@ -437,7 +458,73 @@ def main():
                         
                         predicted_data = prediction(results[0], prediction_data, results[6], results[7])
                         st.table(data=predicted_data)
-                    
+
+                        unique_formations = predicted_data['Probable Formation'].unique()
+
+                        # Generate a color palette with a number of colors matching the unique formations
+                        color_palette = sns.color_palette("husl", n_colors=len(unique_formations))
+
+                        # Create a dynamic color mapping dictionary
+                        color_mapping = {formation: f'rgb({int(r*255)}, {int(g*255)}, {int(b*255)})'
+                                        for formation, (r, g, b) in zip(unique_formations, color_palette)}
+                        
+                        lower_bound = go.Scatter(
+                        x=predicted_data['Lower Bound [bar]'],
+                        y=predicted_data['Depth [m]'],
+                        mode='lines',
+                        name='Lower Bound',
+                        line=dict(color='lightskyblue'),
+                        showlegend=True,
+                        opacity=0.3
+                        )
+
+                        upper_bound = go.Scatter(
+                        x=predicted_data['Upper Bound [bar]'],
+                        y=predicted_data['Depth [m]'],
+                        mode='lines',
+                        name='Upper Bound',
+                        fill='tonexty',  
+                        line=dict(color='lightskyblue'),
+                        fillcolor='rgba(0, 0, 255, 0.1)', 
+                        showlegend=True,
+                        opacity=0.3 
+                        )
+
+                        layout = go.Layout(
+                        title='Predicted MSE with Uncertainty Intervals',
+                        xaxis=dict(title='Mechanical Specific Energy [bar]'),
+                        yaxis=dict(title='Depth'),
+                        showlegend=True,
+                        legend=dict(
+                        tracegroupgap=0,  
+                        itemsizing='trace'  
+                                )
+                        )
+
+                        fig = go.Figure(data=[lower_bound, upper_bound], layout=layout)
+
+                        for formation, color in color_mapping.items():
+                            formation_data = predicted_data[predicted_data['Probable Formation'] == formation]
+                            scatter_trace = go.Scatter(
+                                x=formation_data['Predicted Mean MSE [bar]'],
+                                y=formation_data['Depth [m]'],
+                                mode='markers',
+                                name=formation,
+                                marker=dict(color=color),
+                                legendgroup=formation  
+                            )
+                            fig.add_trace(scatter_trace)  
+
+                        fig.update_layout(showlegend=True)            
+                        fig.update_xaxes(showspikes=True)
+                        fig.update_yaxes(showspikes=True)
+                        fig.update_yaxes(range=[predicted_data['Depth [m]'].min(), predicted_data['Depth [m]'].max()+10])
+                        fig.update_yaxes(autorange="reversed")
+                        fig.update_traces(marker=dict(size=8))
+                        fig.update_layout(height=600, hovermode='closest')
+                        st.plotly_chart(fig)
+
+                                        
                     else:
                         st.warning("**Please make sure that your target depth is greater than zero.**", icon="✅")
                     
