@@ -581,10 +581,11 @@ def plot_intervals(interval_depths, interval_times, available_data):
 
     fig = go.Figure()
 
-    for depth, time in zip(interval_depths, interval_times):
-        fig.add_trace(go.Scatter(x=time, y=depth, mode='markers', marker=dict(color='blue'),
-                                 showlegend=False, name='Interval Measurements', texttemplate='presentation'))
+    
+    fig.add_trace(go.Scatter(x=available_data['Zeit [s]'], y=available_data['Teufe [m]'], mode='markers', marker=dict(color='blue'),
+                                showlegend=True, name='Interval Measurements', texttemplate='presentation', hovertemplate="Time: %{x} seconds <br>Depth: %{y} meters"))
 
+    for depth, time in zip(interval_depths, interval_times):
         last_time = time[-1]
         fig.add_shape(
             type="line",
@@ -604,16 +605,32 @@ def plot_intervals(interval_depths, interval_times, available_data):
             fillcolor='gray',
             opacity=0.5,
             mode='none',
-            showlegend=False
+            showlegend=False,
+            name='Confidence Interval',
+            hovertemplate="Time: %{x} seconds <br>Depth: %{y} meters"
         ))
+    
+    fig.add_trace(go.Scatter(x=[None, None], y=[None, None], mode='lines+text',
+                                    line=dict(color='red', width=2, dash='dash'),
+                                    text=['Interval Boundary'],
+                                    textposition='top center',
+                                    name='Interval Boundary', 
+                                    opacity=0.8, showlegend=True))
 
     fig.update_layout(
         xaxis=dict(title="Measured Time, s"),
         yaxis=dict(title="Measured Depth, m",
                    range=[max(available_data['Teufe [m]']), min(available_data['Teufe [m]'])]),
-        title="Intervals Based on Math Algorithm",
-        showlegend=True
+        title="Intervals Based on Math Algorithm"
     )
+
+    fig.update_layout(height=600, hovermode='closest',
+                        title=dict(
+                        xref='paper',
+                        x=0.5,
+                        font=dict(size=16),
+                        xanchor='center'
+                    ))
 
     st.plotly_chart(fig)
 

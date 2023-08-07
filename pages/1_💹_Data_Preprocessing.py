@@ -13,27 +13,28 @@ class Upload:
         self.data_source = data_source
 
     @st.cache_data(ttl=3600)
-    def read_file(self):
+    @staticmethod
+    def read_file(data, sheet):
         import pandas as pd
         import streamlit as st
 
-        if self.data_source.name.endswith(".xlsx"):
+        if data.name.endswith(".xlsx"):
             # Read Excel file
             try:
-                self.df = pd.read_excel(self.data_source, sheet_name=self.sheet_name)
+                df = pd.read_excel(data, sheet_name=sheet)
             except:
                 st.warning('**Please enter a correct sheet name!**', icon="✅")
 
-        elif self.data_source.name.endswith(".csv"):
+        elif data.name.endswith(".csv"):
             # Read CSV file
-            self.df = pd.read_csv(self.data_source)
+            df = pd.read_csv(data)
         else:
             # Unsupported file format
-            self.df = None
+            df = None
 
             raise ValueError("Unsupported file format. Please upload an Excel or CSV file.")
 
-        return self.df
+        return df
 
 
 def add_logo():
@@ -256,15 +257,16 @@ def main():
 
                 if refresh:
                     try:
-                        data_frame = Upload(data_source=uploaded_data, sheet_name=sheet).read_file()
-                        processed_data = processing(data_frame)[0]
+                        data_frame = Upload(data_source=uploaded_data, sheet_name=sheet)
+                        df = Upload.read_file(data_frame.data_source, data_frame.sheet_name)
+                        processed_data = processing(df)[0]
 
                         st.session_state.processed_data = processed_data
 
                         st.table(data=st.session_state.processed_data.describe())
 
-                        num_features = processing(data_frame)[2]
-                        num_obs = processing(data_frame)[1]
+                        num_features = processing(df)[2]
+                        num_obs = processing(df)[1]
 
                         st.caption(f'**Number of Features:** *{num_features}*')
                         st.caption(f'**Number of Observations:** *{num_obs}*')

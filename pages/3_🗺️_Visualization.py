@@ -57,37 +57,42 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
             fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
                             hover_name='Formation',
                             title='Feature Investigation with Formations', color_discrete_sequence=px.colors.qualitative.G10, trendline='ols', trendline_color_override='red', trendline_scope='overall')
+            fig.update_traces(textposition='middle center', hovertemplate="X-axis: %{x} <br>Y-axis: %{y}</br>")
             
         elif formation_option == 'Include Formations':
             fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y, color='Formation',
                             hover_name='Formation',
                             title='Feature Investigation with Formations', color_discrete_sequence=px.colors.qualitative.G10)
+            fig.update_traces(textposition='middle center', hovertemplate="X-axis: %{x} <br>Y-axis: %{y}</br>")
             
         elif add_linear_curve:
             fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
                             title='Feature Investigation without Formations', trendline='ols', trendline_color_override='red', trendline_scope='overall')
+            fig.update_traces(textposition='middle center', hovertemplate="X-axis: %{x} <br>Y-axis: %{y}</br>")
             
     elif not control_formation:    
         if add_linear_curve:
             fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
                             title='Feature Investigation without Formations', trendline='ols', trendline_color_override='red', trendline_scope='overall')
+            fig.update_traces(textposition='middle center', hovertemplate="X-axis: %{x} <br>Y-axis: %{y}</br>")
             
         else:
             fig = px.scatter(data_feature, x=selected_columns_x, y=selected_columns_y,
                             title='Feature Investigation without Formations')
+            fig.update_traces(textposition='middle center', hovertemplate="X-axis: %{x} <br>Y-axis: %{y}</br>")
     
     
     if control_water:
         if selected_columns_y == 'Teufe [m] Mean' or selected_columns_y == 'Teufe [m]':
             fig.update_yaxes(autorange="reversed")
             fig.add_trace(go.Scatter(x=[None, None], y=[None, None], mode='lines+text',
-                                    line=dict(color='blue', width=2, dash='dash'),
+                                    line=dict(color='lightskyblue', width=2, dash='dash'),
                                     text=['Formation Water'],
                                     textposition='top center',
                                     name='Formation Water Depth', 
-                                    opacity=0.5))
+                                    opacity=0.5, hovertemplate="Depth [m]: %{y} <br>"))
 
-            fig.add_hline(y=water_depth, line=dict(color='blue', width=1, dash='dash'))
+            fig.add_hline(y=water_depth, line=dict(color='lightskyblue', width=1, dash='dash'))
 
     else:
         if selected_columns_y == 'Teufe [m] Mean' or selected_columns_y == 'Teufe [m]':
@@ -98,8 +103,14 @@ def feature_investigation_plot(selected_columns_x, selected_columns_y, formation
     fig.update_yaxes(showspikes=True)
     fig.update_yaxes(range=[data_feature[selected_columns_y].min(), data_feature[selected_columns_y].max()+10])
     fig.update_traces(marker=dict(size=8))
-    fig.update_layout(height=600, hovermode='closest')
-
+    fig.update_layout(height=600, hovermode='closest',
+                        title=dict(
+                        xref='paper',
+                        x=0.5,
+                        font=dict(size=16),
+                        xanchor='center'
+                    ))
+ 
     return fig
 
 

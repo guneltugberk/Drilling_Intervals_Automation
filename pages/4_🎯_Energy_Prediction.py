@@ -177,6 +177,95 @@ def prediction(_best_model, dataset, _onehot_encoder, _scaler, num_bootstraps=10
     return df
 
 
+@st.cache_resource(ttl=3600)
+def uncertainty_plot(predicted):
+    import plotly.graph_objects as go
+    import seaborn as sns
+
+    unique_formations = predicted['Probable Formation'].unique()
+
+    # Generate a color palette with a number of colors matching the unique formations
+    color_palette = sns.color_palette("husl", n_colors=len(unique_formations))
+
+    # Create a dynamic color mapping dictionary
+    color_mapping = {formation: f'rgb({int(r*255)}, {int(g*255)}, {int(b*255)})'
+                    for formation, (r, g, b) in zip(unique_formations, color_palette)}
+    
+
+    lower_bound = go.Scatter(
+    x=predicted['Lower Bound [bar]'],
+    y=predicted['Depth [m]'],
+    mode='lines',
+    name='Lower Bound',
+    line=dict(color='lightskyblue'),
+    showlegend=True,
+    opacity=0.3,
+    hovertemplate="Depth: %{y} meter<br>Lower Bound MSE: %{x} bars<br><extra></extra>"
+    )
+
+    upper_bound = go.Scatter(
+    x=predicted['Upper Bound [bar]'],
+    y=predicted['Depth [m]'],
+    mode='lines',
+    name='Upper Bound',
+    fill='tonexty',  
+    line=dict(color='lightskyblue'),
+    fillcolor='rgba(0, 0, 255, 0.1)', 
+    showlegend=True,
+    opacity=0.3,
+    hovertemplate="Depth: %{y} meters<br>Upper Bound MSE: %{x} bars<br><extra></extra>"
+    )
+
+    layout = go.Layout(
+    title=dict(text='Predicted MSE with Uncertainty Intervals'),
+    xaxis=dict(title='Mechanical Specific Energy [bar]'),
+    yaxis=dict(title='Depth [m]'),
+    showlegend=True,
+    legend=dict(
+    tracegroupgap=0,  
+    itemsizing='trace'  
+            )
+    )
+
+    fig = go.Figure(data=[lower_bound, upper_bound], layout=layout)
+
+    for formation, color in color_mapping.items():
+        formation_data = predicted[predicted['Probable Formation'] == formation]
+        hover_template = (
+            "Formation: %{text}<br>" 
+            "Predicted Mean MSE: %{x} bars<br>" 
+            "Depth: %{y} meters<extra></extra>"
+        )
+
+        scatter_trace = go.Scatter(
+            x=formation_data['Predicted Mean MSE [bar]'],
+            y=formation_data['Depth [m]'],
+            mode='markers',
+            name=formation,
+            marker=dict(color=color),
+            legendgroup=formation,
+            text=[formation] * len(formation_data),  
+            hovertemplate=hover_template
+        )
+
+        fig.add_trace(scatter_trace)
+    
+    fig.update_layout(showlegend=True)            
+    fig.update_xaxes(showspikes=True)
+    fig.update_yaxes(showspikes=True)
+    fig.update_yaxes(range=[predicted['Depth [m]'].min(), predicted['Depth [m]'].max()+10])
+    fig.update_yaxes(autorange="reversed")
+    fig.update_traces(marker=dict(size=8))
+    fig.update_layout(height=600, hovermode='closest',
+                        title=dict(
+                        xref='paper',
+                        x=0.5,
+                        font=dict(size=16),
+                        xanchor='center'
+                    ))
+    
+    return fig
+
 def add_logo():
     st.markdown(
         """
@@ -467,85 +556,9 @@ def main():
                         """
                         , unsafe_allow_html=True
                         )
-
-                        unique_formations = predicted_data['Probable Formation'].unique()
-
-                        # Generate a color palette with a number of colors matching the unique formations
-                        color_palette = sns.color_palette("husl", n_colors=len(unique_formations))
-
-                        # Create a dynamic color mapping dictionary
-                        color_mapping = {formation: f'rgb({int(r*255)}, {int(g*255)}, {int(b*255)})'
-                                        for formation, (r, g, b) in zip(unique_formations, color_palette)}
                         
-                        lower_bound = go.Scatter(
-                        x=predicted_data['Lower Bound [bar]'],
-                        y=predicted_data['Depth [m]'],
-                        mode='lines',
-                        name='Lower Bound',
-                        line=dict(color='lightskyblue'),
-                        showlegend=True,
-                        opacity=0.3
-                        )
+                        fig = uncertainty_plot(predicted=predicted_data)
 
-                        upper_bound = go.Scatter(
-                        x=predicted_data['Upper Bound [bar]'],
-                        y=predicted_data['Depth [m]'],
-                        mode='lines',
-                        name='Upper Bound',
-                        fill='tonexty',  
-                        line=dict(color='lightskyblue'),
-                        fillcolor='rgba(0, 0, 255, 0.1)', 
-                        showlegend=True,
-                        opacity=0.3 
-                        )
-
-                        layout = go.Layout(
-                        title=dict(text='Predicted MSE with Uncertainty Intervals'),
-                        xaxis=dict(title='Mechanical Specific Energy [bar]'),
-                        yaxis=dict(title='Depth [m]'),
-                        showlegend=True,
-                        legend=dict(
-                        tracegroupgap=0,  
-                        itemsizing='trace'  
-                                )
-                        )
-
-                        fig = go.Figure(data=[lower_bound, upper_bound], layout=layout)
-
-                        for formation, color in color_mapping.items():
-                            formation_data = predicted_data[predicted_data['Probable Formation'] == formation]
-                            hover_template = (
-                                "Formation: %{text}<br>" 
-                                "Predicted Mean MSE: %{x} bars<br>" 
-                                "Depth: %{y} meters<extra></extra>"
-                            )
-
-                            scatter_trace = go.Scatter(
-                                x=formation_data['Predicted Mean MSE [bar]'],
-                                y=formation_data['Depth [m]'],
-                                mode='markers',
-                                name=formation,
-                                marker=dict(color=color),
-                                legendgroup=formation,
-                                text=[formation] * len(formation_data),  
-                                hovertemplate=hover_template
-                            )
-                            fig.add_trace(scatter_trace)  
-
-                        fig.update_layout(showlegend=True)            
-                        fig.update_xaxes(showspikes=True)
-                        fig.update_yaxes(showspikes=True)
-                        fig.update_yaxes(range=[predicted_data['Depth [m]'].min(), predicted_data['Depth [m]'].max()+10])
-                        fig.update_yaxes(autorange="reversed")
-                        fig.update_traces(marker=dict(size=8))
-                        fig.update_layout(height=600, hovermode='closest',
-                                          title=dict(
-                                            xref='paper',
-                                            x=0.5,
-                                            font=dict(size=16),
-                                            xanchor='center'
-                                        ))
-                        
                         st.plotly_chart(fig)
 
                                         
