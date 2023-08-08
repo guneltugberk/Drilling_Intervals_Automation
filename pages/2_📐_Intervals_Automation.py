@@ -22,7 +22,6 @@ class Intervals:
     @st.cache_resource(ttl=3600)
     def custom_grid_search(X, n_estimators_list, max_samples_list, contamination_list):
         from sklearn.ensemble import IsolationForest
-        from sklearn.metrics import precision_recall_curve, auc
         import numpy as np
 
         best_params = None
@@ -126,19 +125,28 @@ class Intervals:
             data_frame.reset_index(drop=True, inplace=True)
 
             X = np.array(data_frame.filter(regex=r'(?i)^vB'))
+            X_2 = np.array(data_frame.filter(regex=r'(?i)^Delta Zeit')) 
 
             n_estimators = [50, 100, 200, 300, 400, 500]
             max_samples = [0.1, 0.2, 0.5, 0.6, 0.7, 0.8]
             contamination = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25]
 
             best_params, best_score = Intervals.custom_grid_search(X, n_estimators, max_samples, contamination)
+            best_params_teufe, best_score_teufe = Intervals.custom_grid_search(X_2, n_estimators, max_samples, contamination) 
 
             best_model = IsolationForest(n_estimators=best_params['n_estimators'], max_samples=best_params['max_samples'], contamination=best_params['contamination'])
+            best_model_teufe = IsolationForest(n_estimators=best_params_teufe['n_estimators'], max_samples=best_params_teufe['max_samples'], contamination=best_params_teufe['contamination'])
+
             best_model.fit(X)
+            best_model_teufe.fit(X_2) 
 
             outliers = best_model.predict(X)
-            outlier_indices = data_frame.index[outliers == -1]
-            ml_outlier = np.sum(outliers == -1)
+            outliers_teufe = best_model_teufe.predict(X_2)
+
+            combined_outliers = np.logical_or(outliers == -1, outliers_teufe == -1) 
+            indices = np.where(combined_outliers)[0]
+
+            ml_outlier = np.sum(combined_outliers)
 
             total_outlier = None
 
@@ -148,9 +156,9 @@ class Intervals:
             else:
                 total_outlier = ml_outlier + custom_outlier
 
-            cleaned_data = data_frame.drop(outlier_indices)
+            cleaned_data = data_frame.drop(indices)
 
-        return cleaned_data, best_params, best_score, ml_outlier, custom_outlier, z, total_outlier
+        return cleaned_data, best_params, best_score, ml_outlier, custom_outlier, z, total_outlier, best_score_teufe, best_params_teufe
 
     @staticmethod
     def Energy(data):
@@ -351,6 +359,13 @@ class Intervals:
                         assigned_formation = formations[i]
                         break
 
+                    else:
+                        diff = depth - interval[1]
+
+                        if round(diff, 2) < 3:
+                            assigned_formation = formations[i]
+                            break
+
                 interval_formations.append(assigned_formation)
                 
             data_set.loc[:, 'Formation'] = interval_formations
@@ -364,6 +379,13 @@ class Intervals:
                     if interval[0] < depth <= interval[1]:
                         assigned_formation = formations[i]
                         break
+
+                    else:
+                        diff = depth - interval[1]
+
+                        if round(diff, 2) < 3:
+                            assigned_formation = formations[i]
+                            break
 
                 interval_formations.append(assigned_formation)
 
@@ -871,29 +893,32 @@ def main():
                                 <table class='justify-content-center'>
                                     <tr>
                                         <th><center>ML Model</center></th>
-                                        <th><center>ML Model Score</center></th>
+                                        <th><center>ML Model Score on vB</center></th>
+                                        <th><center>ML Model Score on Delta Zeit</center></th>
                                         <th><center>Custom Model</center></th>
                                         <th><center>Statistics Model</center></th>
                                     </tr>
                                     <tr>
                                         <td><center>Isolation Forest</center></td>
-                                        <td><center>{outlier[2]}</center></td>
+                                        <td><center>{round(outlier[2], 2)}</center></td>
+                                        <td><center>{round(outlier[7], 2)}</center></td>
                                         <td><center>Checkout Article</center></td>
                                         <td><center>Z-Score</center></td>
                                     </tr>
                                 </table>
-                            </center>
+                            </center>   
                             """, unsafe_allow_html=True)
                 
                 st.markdown('                            ')
                 st.markdown('                            ')
 
+                vb = outlier[1]
+                delta_zeit = outlier[8]
 
                 st.markdown("""
-                            <div class='stHeader'><center>Outlier Detection Model Hyperparameters</center>
+                            <div class='stHeader'><center>Outlier Detection on vB Model Hyperparameters</center>
                             """, unsafe_allow_html=True)
-                        
-
+                
                 st.markdown(f"""
                     <center>
                         <table class='justify-content-center'>
@@ -901,10 +926,30 @@ def main():
                                 <th><center>Hyperparameter</center></th>
                                 <th><center>Value</center></th>
                             </tr>
-                            {"".join(f"<tr><td><center>{key}</center></td><td><center>{value}</center></td></tr>" for key, value in outlier[1].items())}
+                            {"".join(f"<tr><td><center>{key}</center></td><td><center>{value}</center></td></tr>" for key, value in vb.items())}
                         </table>
                     </center>
                     """, unsafe_allow_html=True)
+                
+                st.markdown('                            ')
+
+                st.markdown("""
+                            <div class='stHeader'><center>Outlier Detection on Delta Zeit Model Hyperparameters</center>
+                            """, unsafe_allow_html=True)
+                
+                st.markdown(f"""
+                    <center>
+                        <table class='justify-content-center'>
+                            <tr>
+                                <th><center>Hyperparameter</center></th>
+                                <th><center>Value</center></th>
+                            </tr>
+                            {"".join(f"<tr><td><center>{key}</center></td><td><center>{value}</center></td></tr>" for key, value in delta_zeit.items())}
+                        </table>
+                    </center>
+                    """, unsafe_allow_html=True)
+
+
                 st.markdown('                            ')
                 st.markdown('                            ')
 
