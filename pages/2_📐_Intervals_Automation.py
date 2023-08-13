@@ -472,9 +472,11 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
     if Wp is not None and Wh is not None and Wb is not None and Axial is not None:
         for i in range(len(interval_df_copy)):
             if i == 0:
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = Wp + Wh + Wb
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wh + Wb + (Axial[i] * 1000)
             
             else:
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp 
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
 
         all_params = 1
@@ -482,59 +484,74 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
     elif Wp is not None and Wh is None and Wb is not None and Axial is not None:
         for i in range(len(interval_df_copy)):
             if i == 0:
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = Wp + Wb
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wb + (Axial[i] * 1000)
             
             else:
-                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000) 
+
 
     elif Wp is not None and Wb is None and Wh is not None and Axial is not None:
         for i in range(len(interval_df_copy)):
             if i == 0:
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = Wp + Wh
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wh + (Axial[i] * 1000)
-            
+
             else:
-                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000) 
             
 
     elif Wp is not None and Wb is None and Wh is None and Axial is not None:
         for i in range(len(interval_df_copy)):
             if i == 0:
-                interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + (Axial[i] * 1000)
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = Wp
+                interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + (Axial[i] * 1000) 
             
             else:
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
 
     
     elif Wp is not None and Wb is None and Wh is None and Axial is None:
         for i in range(len(interval_df_copy)):
             if i == 0:
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp 
             
             else:
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
 
     elif Wp is not None and Wb is not None and Wh is not None and Axial is None:
         for i in range(len(interval_df_copy)):
             if i == 0:
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = Wp + Wb + Wh
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wb + Wh
             
             else:
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
     
     elif Wp is not None and Wb is not None and Wh is None and Axial is None:
         for i in range(len(interval_df_copy)):
             if i == 0:
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = Wp + Wb
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wb 
             
             else:
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
         
     elif Wp is not None and Wb is None and Wh is not None and Axial is None:
         for i in range(len(interval_df_copy)):
             if i == 0:
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = Wp + Wh
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wh
             
             else:
+                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
 
     return interval_df_copy, all_params
@@ -570,15 +587,13 @@ def Control(data, cols, length, error, int_depth=None, rocks=None, number_of_int
     required_columns = ["Zeit [s]", "Delta Zeit [s]", "Teufe [m]", "Delta Teufe [m]", "p Luft [bar]", "DZ [U/min]", "Q Luft [Nm3/min]"]
     flag_control = -3
 
-
-    
     if int_depth is None and number_of_intervals is None and rocks is None:
-        if all(col in cols for col in required_columns) and all(col in data.columns for col in required_columns):
+        if all(col in data.columns for col in required_columns):
             flag_control = 1
 
         
     if cols and length and error and int_depth and number_of_intervals and rocks:
-        if all(col in cols for col in required_columns) and all(col in data.columns for col in required_columns):
+        if all(col in data.columns for col in required_columns):
             if all(value[0] < value[1] for value in int_depth) and all(rocks):
                 if number_of_intervals >= 1:
                     flag_control = 1
@@ -1073,7 +1088,7 @@ def main():
                 st.error('**Please make sure that your dataset features are in SI unit system!**', icon='🛑')
 
             elif st.session_state.flag == -1:
-                st.warning('**Number of formation intervals cannot be less than 1!**', icon='💹')
+                st.warning('**Number of formation intervals cannot be less than 1!**', icon='⚠️')
             elif st.session_state.flag == -2:
                 st.warning(
                     "**The following interval's start measurement cannot be less than previous formation's end boundary!**",
@@ -1085,7 +1100,7 @@ def main():
 
 
         else:
-            st.warning('**Please press Start button to proceed!**', icon='💹')
+            st.warning('**Please press Start button to proceed!**', icon='⚠️')
 
         if display_chart:
             with st.form('Chart'):
@@ -1101,7 +1116,7 @@ def main():
                     plot_intervals(interval_depths, interval_times, st.session_state.prior_data_rocks)
 
     else:
-        st.warning('**This dataset is empty. Probably something went wrong. Please repeat the calculations.', icon='💹')
+        st.warning('**This dataset is empty. Probably something went wrong. Please repeat the calculations.', icon='⚠️')
 
 
 if __name__ == '__main__':

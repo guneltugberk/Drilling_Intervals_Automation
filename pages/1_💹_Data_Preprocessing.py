@@ -23,7 +23,7 @@ class Upload:
             try:
                 df = pd.read_excel(data, sheet_name=sheet)
             except:
-                st.warning('**Please enter a correct sheet name!**', icon="✅")
+                st.warning('**Please enter a correct sheet name!**', icon='⚠️')
 
         elif data.name.endswith(".csv"):
             # Read CSV file
@@ -189,12 +189,12 @@ def main():
 
                 if file_name.endswith(".csv"):
                         st.session_state.uploaded_data = uploaded_data
-                        st.success('**Dataset has been uploaded!**', icon="✅")
+                        st.success('**Dataset has been uploaded!**', icon='✅')
 
                 elif file_name.endswith(".xlsx"):
                     if sheet.strip():
                         st.session_state.uploaded_data = uploaded_data
-                        st.success('**Dataset has been uploaded!**', icon="✅")
+                        st.success('**Dataset has been uploaded!**', icon='✅')
 
                 else:
                     st.error('**Please enter a sheet name!**')
@@ -224,7 +224,7 @@ def main():
 
                     if percent_complete + 1 == 100:
                         my_bar.progress(percent_complete + 1, text='**Dataset has been uploaded!**')
-                        st.success('**Dataset has been processed!**', icon="✅")
+                        st.success('**Dataset has been processed!**', icon='✅')
                     elif percent_complete > 100 or percent_complete < 0:
                         st.error(st.error('**Something went wrong, try again!**', icon="🚨"))
 
@@ -282,10 +282,10 @@ def main():
 
                     except:
                         st.session_state.processed_data = pd.DataFrame([])
-                        st.warning('**Please supply all necessary informations.**', icon="✅")
+                        st.warning('**Please supply all necessary informations.**', icon='⚠️')
 
                 if not refresh:
-                    st.warning('**Please refresh the page and re-upload the dataset.**', icon='💹')
+                    st.warning('**Please refresh the page and re-upload the dataset.**', icon='⚠️')
 
         if new_form == 1:
             if not st.session_state.processed_data.empty:
@@ -311,7 +311,7 @@ def main():
                                 st.session_state.dropped_data = dropped_data
 
                                 if st.session_state.dropped_data is not None and isinstance(st.session_state.dropped_data, pd.DataFrame):
-                                    st.success('**All missing values are dropped!**', icon="✅")
+                                    st.success('**All missing values are dropped!**', icon='✅')
 
                                     st.markdown("""
                                     <div class='stHeader'>Number of Missing values</div>
@@ -320,7 +320,7 @@ def main():
                                     st.table(data=st.session_state.dropped_data.isna().sum())
 
                                 elif st.session_state.dropped_data is None:
-                                    st.warning('**Please re-upload the dataset.**', icon='💹')
+                                    st.warning('**Please re-upload the dataset.**', icon='⚠️')
 
                                 else:
                                     st.error('**Something went wrong, try again!**', icon="🚨")
@@ -337,14 +337,14 @@ def main():
 
                     st.session_state.dropped_data = dropped_data
                         
-                    st.info('**There are no missing values to handle.**', icon='💹')
+                    st.info('**There are no missing values to handle.**', icon='⚠️')
 
             else:
-                st.warning('**Please upload a proper dataset!**', icon='💹')
+                st.warning('**Please upload a proper dataset!**', icon='⚠️')
 
 
     elif not st.session_state.uploaded_data:
-        st.warning('**Please complete data uploading part carefully!**', icon='💹')
+        st.warning('**Please complete data uploading part carefully!**', icon='⚠️')
 
 
 if __name__ == '__main__':
