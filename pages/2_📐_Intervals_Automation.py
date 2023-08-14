@@ -472,11 +472,11 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
     if Wp is not None and Wh is not None and Wb is not None and Axial is not None:
         for i in range(len(interval_df_copy)):
             if i == 0:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = Wp + Wh + Wb
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = Wp + Wh + Wb
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wh + Wb + (Axial[i] * 1000)
             
             else:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp 
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp 
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
 
         all_params = 1
@@ -484,22 +484,22 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
     elif Wp is not None and Wh is None and Wb is not None and Axial is not None:
         for i in range(len(interval_df_copy)):
             if i == 0:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = Wp + Wb
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = Wp + Wb
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wb + (Axial[i] * 1000)
             
             else:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000) 
 
 
     elif Wp is not None and Wb is None and Wh is not None and Axial is not None:
         for i in range(len(interval_df_copy)):
             if i == 0:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = Wp + Wh
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = Wp + Wh
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wh + (Axial[i] * 1000)
 
             else:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000) 
             
 
@@ -510,7 +510,7 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + (Axial[i] * 1000) 
             
             else:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp + (Axial[i] * 1000)
 
     
@@ -521,7 +521,7 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp 
             
             else:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
 
     elif Wp is not None and Wb is not None and Wh is not None and Axial is None:
@@ -531,7 +531,7 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wb + Wh
             
             else:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
     
     elif Wp is not None and Wb is not None and Wh is None and Axial is None:
@@ -541,7 +541,7 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wb 
             
             else:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
         
     elif Wp is not None and Wb is None and Wh is not None and Axial is None:
@@ -551,7 +551,7 @@ def WOB(interval_df, Wp=None, Wh=None, Wb=None, Axial=None):
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = Wp + Wh
             
             else:
-                interval_df_copy[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
+                interval_df_copy.loc[i, 'Section Drillstring Weight [kg]'] = interval_df_copy.loc[i-1, 'Section Drillstring Weight [kg]'] + Wp
                 interval_df_copy.loc[i, 'Section WOB [kg]'] = interval_df_copy.loc[i-1, 'Section WOB [kg]'] + Wp
 
     return interval_df_copy, all_params
