@@ -103,7 +103,7 @@ def main():
                 <li>Data Preprocessing</li>
                 <li>Statistical Automation for Identification of Drilling Data</li>
                 <li>Visualizations</li>
-                <li>Machine Learning Model to Predict -Still developing-</li>
+                <li>Machine Learning Model to Predict Mechanical Specific Energy</li>
             </ul>
             <div class="stHeader">To contact me or the professors:</div>
             <h4>Berat Tuğberk Günel</h4>
