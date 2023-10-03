@@ -303,13 +303,13 @@ def main():
                         st.session_state.formation_water = None
 
                     if st.session_state.formation_water is None:
-                        st.warning('**Please go back into previous page to specify Formation Water Depth**')
+                        st.warning('**Please go back into previous page to specify Formation Water Depth**', icon='⚠️')
 
                     display_plot = st.button('Confirm Selection')
 
                     if display_plot:
                         if 'Formation' in selected_columns_x or 'Formation' in selected_columns_y:
-                            st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='💹')
+                            st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='⚠️')
                             
                         else:
                             if st.session_state.formation_water:
@@ -352,13 +352,13 @@ def main():
                         st.session_state.formation_water = None
 
                     if st.session_state.formation_water is None:
-                        st.warning('**Please go back into previous page to specify Formation Water Depth**')
+                        st.warning('**Please go back into previous page to specify Formation Water Depth**', icon='⚠️')
 
                     display_plot = st.button('Confirm Selection')
 
                     if display_plot:
                         if 'Formation' in selected_columns_x or 'Formation' in selected_columns_y:
-                            st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='💹')
+                            st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='⚠️')
                             
                         else:
                             if st.session_state.formation_water:
@@ -392,7 +392,7 @@ def main():
 
                 if display_plot:
                     if 'Formation' in feature_selection:
-                            st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='💹')
+                            st.warning('You cannot plot a categorical variable on a graph! Please re-select another feature', icon='⚠️')
                             
                     else:
                         fig = distribution_plot(st.session_state.prior_data_rocks, feature_selection, st.session_state.formation_info, formation_option)
@@ -400,7 +400,7 @@ def main():
                         st.plotly_chart(fig)
             
             elif visualization_type == 'Distribution Analysis' and data_type == 'Use Stats Data':
-                st.warning('**You can not use the interval data to visualize distribution as it contains less amount of data.**', icon='💹')
+                st.warning('**You can not use the interval data to visualize distribution as it contains less amount of data.**', icon='⚠️')
 
 
 

@@ -568,7 +568,7 @@ def MSE(dataframe, d):
         T = dataframe.loc[i, 'DM [Nm] Mean'] * 0.737463126
         ROP = dataframe.loc[i, 'vB [m/h] Mean'] * 3.2808399
 
-        mse = ((4 * wob) / (math.pi * diameter**2)) + ((8 * N * T) / (diameter**2 * ROP))
+        mse = ((4 * wob) / (math.pi * diameter**2)) + ((480 * N * T) / (diameter**2 * ROP))
         mse = mse * 0.0689475729
 
         dataframe.loc[i, 'MSE [bar]'] = round(mse, 3)
