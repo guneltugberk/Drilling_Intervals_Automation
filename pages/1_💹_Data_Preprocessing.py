@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(
-        page_title='Data Uploading and Preprocessing',
+        page_title='Data Uploading',
         page_icon='💹'
     )
 
